@@ -19,7 +19,7 @@ What are the expected speed values?
 
 ### SA-1 Speed Test
 SNES Operation | SA-1 Operation | SA-1 Speed
-===============|================|============
+---------------|----------------|------------
 WRAM|ROM|10.74 MHz
 ROM|ROM|Unknown, 5~9 MHz
 WRAM|I-RAM|10.74 MHz
