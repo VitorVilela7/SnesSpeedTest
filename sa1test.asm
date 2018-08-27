@@ -24,19 +24,19 @@ dw $0000
 dw $ffff
 
 dd $00000000
-dw null_irq
-dw null_irq
-dw null_irq
-dw null_irq
-dw null_irq
-dw null_irq
+dw break
+dw break
+dw break
+dw $0A00	; NMI stays on WRAM
+dw break
+dw break
 dd $00000000
-dw null_irq
-dw null_irq
-dw null_irq
-dw null_irq
+dw break
+dw break
+dw break
+dw break
 dw Reset
-dw null_irq
+dw break
 
 org $008000
 Reset:
@@ -99,24 +99,37 @@ Reset:
 	
 	lda #$40
 	sta $2107 ; layer 1 = tilemap $8000, 256x256 tilemap
+	lda #$44
+	sta $2108
 	
 	stz $210b ; l1 character data = $0000
 	
 	; setup palette
 	; color 0 = $0000
-	; color 1 = $7fff
+	; color 1 = $7bde
 	; color 2 = $0000
+	; color 3 = $39ce
 	
-	lda #$00
-	sta $2121
+	ldy #$20
+-	sty $2121
 	stz $2122
 	stz $2122
-	lda #$ff
+	lda #$de
 	sta $2122
-	lda #$7f
+	lda #$7b
 	sta $2122
 	stz $2122
 	stz $2122
+	lda #$ce
+	sta $2122
+	lda #$39
+	sta $2122
+	
+	cpy #$00
+	beq +
+	ldy #$00
+	bra -
++
 	
 	; cgadsub
 	lda #$20
@@ -151,10 +164,16 @@ Reset:
 	sta $4300
 	lda #$8000
 	sta $4302
-	lda #$0800
+	lda #$1000
 	sta $4305
 	sty $420b
+	
+	lda #$4400
+	sta $2116
 	sep #$20
+	lda #$6f
+	sta $2118
+	stz $2119
 	
 	; mvn bank 01
 	php
@@ -167,9 +186,18 @@ Reset:
 	plb
 	plp
 	
-	lda #$01
+	stz $212a
+	stz $212b
+	
+	lda #$02
 	sta $212c
-	stz $212d
+	sta $212e
+	lda #$01
+	sta $212f
+	sta $212d
+	
+	lda #$02
+	sta $2130
 	
 	lda #$fc
 	sta $210e
@@ -180,64 +208,164 @@ Reset:
 	lda #$0f
 	sta $2100
 	
+	lda #$fb
+	sta $210f
+	lda #$ff
+	sta $210f
+	
 	sei
 	stz $4200
 	
-	
-	.SeeAgain
-	
-	jsr printinittext
+macro cursor_pos(y)
+	lda.b #-<y><<3-$001C
+	sta $2110
+	lda #$ff
+	sta $2110
+endmacro
+
+macro transfer(label, ram)
+	phb
+	rep #$30
+	lda.w #<label>_end-<label>-1
+	ldx.w #<label>
+	ldy.w #<ram>
+	mvn <ram>>>16, <label>>>16
+	sep #$30
+	plb
+endmacro
+
+.SeeAgain
+	%cursor_pos(0) : jsr printinittext
 	
 	rep #$20
 	lda #$4080
 	sta $2116
-	php
 	sep #$30
-	jsr test1
-	jsr test2
-	jsr test3
-	jsr test4
-	jsr test5
-	jsr test6
-	jsr test7
-	jsr test8
-	plp
+	%cursor_pos(1) : jsr test_rom
+	%cursor_pos(2) : jsr test_rom_parallel
+	%cursor_pos(3) : jsr test_iram
+	%cursor_pos(4) : jsr test_iram_rom
+	%cursor_pos(5) : jsr test_bwram
+	%cursor_pos(6) : jsr test_bwram_rom
+	%cursor_pos(7) : jsr test_iram_iram
+	%cursor_pos(8) : jsr test_bwram_bwram
+	%cursor_pos(9) : jsr test_hdma_rom
+	%cursor_pos(10) : jsr test_hdma_wram
+	%cursor_pos(11) : jsr test_dma_rom
+	%cursor_pos(12) : jsr test_dma_iram
+	%cursor_pos(14) : jsr test_scpu_rom
+	%cursor_pos(15) : jsr test_scpu_wram
+	%cursor_pos(16) : jsr test_scpu_iram
+	%cursor_pos(18) : jsr test_scpu_hdma_rom
+	%cursor_pos(19) : jsr test_scpu_hdma_wram
+	%cursor_pos(20) : jsr test_scpu_hdma_iram
+	
+	jsr printendtext
 	
 	sep #$20
 	
-	;lda #$4080
-	;sta $2116
-	;php
-	;sep #$30
-	;jsr test2
-	;plp
-	;sep #$20
-	
-	lda #$0f
-	sta $2100
-	
-	;lda #$80
-	;sta $2100
 	jmp .SeeAgain
 
-null_irq:
-	rti
+; attempts to recover after a crash.
+
+recover:
+	phb
+	rep #$30
+	lda #$7fff
+	ldx #$8000
+	ldy #$8000
+	mvn $7f, $01
+	sep #$30
+	plb
+
+	rep #$20
+	stz $3042
+	stz $3044
+	lda #recover_sa1
+	sta $2207
+	sep #$20
+	stz $3080
+	lda #$80
+	sta $2200
+-	lda $3080
+	beq -
+	rtl
 	
+recover_sa1:
+	clc
+	xce
+	cld
+	rep #$30
+	lda #$07ff
+	tcs
+	pea $0000
+	pld
+	pea $0000
+	plb
+	plb
+	sep #$10
+	lda #$0000
+	ldx #$f0
+	stx $3080
+	cli
+-	bra -
+	
+break:
+	rep #$20
+	lda #$1fff
+	tcs
+	sep #$20
+	
+	lda #$00
+	sta $004200
+	sei
+	
+	%transfer(NMI, $0A00)
+	
+	lda #$80
+	sta $002132
+	lda #$34
+	sta $002132
+	
+	lda #$ff
+	sta $002202
+	sta $00220b
+	lda.b #NMI_code3-NMI_code0
+	sta $000a01
+	lda #$80
+	sta $004200
+	cli
+	rep #$20
+	sep #$10
+	lda #$0000
+	ldx #$f0
+	jmp $0a00
+-	bra -
 
-
-incsrc src\lib.asm
 incsrc src\init.asm
 incsrc src\text.asm
-	
-macro write_text(label1)
-	rep #$20
-	lda #<label1>
+
+write_text:
 	sta $00
 	stz $02
 	
 	jsl WriteASCII
 	
 	sep #$20
+	lda $3081
+	ora $3080
+	cmp #$69
+	bne .no_error
+	
+	rep #$20
+	lda #.error_text
+	sta $00
+	stz $02
+	jsl WriteASCII
+	sep #$20
+	rts
+	
+.no_error
 	lda $3044
 	jsr HexDec
 	
@@ -272,67 +400,191 @@ macro write_text(label1)
 	
 	jsl WriteASCII
 	
-	sep #$20
-endmacro
-
-test1:
-	jsl Speed_Test_1|$7f0000
-	%write_text(.str)
+	sep #$20	
+	rts
+	
+.error_text
+	db "  ERROR   |",$ff
+	
+test_rom:
+	jsl Speed_Test_9|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
 	rts
 	
 .str	db "|   WRAM   |  ROM  | ",$ff
 
-test2:
-	jsl Speed_Test_1
-	%write_text(.str)
+test_rom_parallel:
+	jsl Speed_Test_9
+	rep #$20
+	lda #.str
+	jsr write_text
 	rts
 	
 .str	db "|   ROM    |  ROM  | ",$ff
-	
-test3:
-	jsl Speed_Test_2|$7f0000
-	%write_text(.str)
-	rts
-	
-.str	db "|   WRAM   | I-RAM | ",$ff
 
-test4:
-	jsl Speed_Test_2
-	%write_text(.str)
-	rts
-	
-.str	db "|   ROM    | I-RAM | ",$ff
-	
-test5:
-	jsl Speed_Test_3|$7f0000
-	%write_text(.str)
+test_bwram:
+	jsl Speed_Test_10|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
 	rts
 	
 .str	db "|   WRAM   |BW-RAM | ",$ff
-	
-test6:
-	jsl Speed_Test_3
-	%write_text(.str)
+
+test_bwram_rom:
+	jsl Speed_Test_10
+	rep #$20
+	lda #.str
+	jsr write_text
 	rts
 	
 .str	db "|   ROM    |BW-RAM | ",$ff
 
-test7:
-	jsl Speed_Test_4
-	%write_text(.str)
+test_iram:
+	jsl Speed_Test_11|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
 	rts
 	
-	;;;;;;;;;;;;;;;;
+.str	db "|   WRAM   | I-RAM | ",$ff
+
+test_iram_rom:
+	jsl Speed_Test_11
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   ROM    | I-RAM | ",$ff
+
+test_iram_iram:
+	jsl Speed_Test_12
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  I-RAM   | I-RAM | ",$ff
+
+test_bwram_bwram:
+	jsl Speed_Test_13
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  BW-RAM  |BW-RAM | ",$ff
+
+test_hdma_rom:
+	jsl Speed_Test_14|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| HDMA ROM |  ROM  | ",$ff
+
+test_hdma_wram:
+	jsl Speed_Test_15|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| HDMA WRAM|  ROM  | ",$ff
+
+test_dma_rom:
+	jsl Speed_Test_16|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
 .str	db "| DMA ROM  |  ROM  |~",$ff
 
-test8:
-	jsl Speed_Test_5
-	%write_text(.str)
+test_dma_iram:
+	jsl Speed_Test_17|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
 	rts
 	
-	;;;;;;;;;;;;;;;;
 .str	db "| DMA ROM  | I-RAM |~",$ff
 
+test_scpu_rom:
+	jsl Speed_Test_18
+	rep #$20
+	
+	lda #.string
+	sta $00
+	stz $02
+	jsl WriteASCII
+	
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| S-CPU   ROM Speed| ",$ff
+
+	;   0123456789abcdef0123456789abcdef
+.string	db "#__________*_______%___________$",$ff
+
+test_scpu_wram:
+	jsl Speed_Test_18|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| S-CPU  WRAM Speed| ",$ff
+
+test_scpu_iram:
+	jsl Speed_Test_19
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| S-CPU I-RAM Speed| ",$ff
+
+test_scpu_hdma_rom:
+	jsl Speed_Test_20
+	rep #$20
+	
+	lda #.string
+	sta $00
+	stz $02
+	jsl WriteASCII
+	
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| S-CPU   ROM Speed| ",$ff
+
+	;   0123456789abcdef0123456789abcdef
+.string	db "#_____________{HDMA#___________$",$ff
+
+test_scpu_hdma_wram:
+	jsl Speed_Test_20|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| S-CPU  WRAM Speed| ",$ff
+
+test_scpu_hdma_iram:
+	jsl Speed_Test_21
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| S-CPU I-RAM Speed| ",$ff
 	
 SA1Reset:
 	sei
@@ -348,7 +600,8 @@ SA1Reset:
 	plb
 	sep #$30
 	
-	stz $2209
+	lda #$50
+	sta $2209
 	
 	lda #$f0
 	sta $220b
@@ -377,69 +630,16 @@ SA1Reset:
 	bpl -
 	lda #$aabb
 	sta $00
-	sep #$30
+	sep #$10
 
 	cli
 	
+	; stay 16-bit A
+	lda #$0000
+	ldx #$f0 ; clear irq
+	clc
 .loop
 	bra .loop
-	
-SA1NMI:
-	rti
-	
-SA1IRQ:
-	php
-	rep #$30
-	phb
-	phd
-	pha
-	phx
-	phy
-	phk
-	plb
-	sep #$30
-	
-	lda $2301
-	and #$0f
-	asl a
-	tax
-	jsr (.msg,x)
-	
-	lda #$f0
-	sta $220b
-	sta $220a
-	
-	rep #$30
-	ply
-	plx
-	pla
-	pld
-	plb
-	plp
-	rti
-	
-.msg
-	dw speednew
-	dw speediram
-	dw speedbwram
-	
-speediram:
-	%transfer(Speed_Test_1_SA1,$3600)
-	jsl $003600
-	rts
-
-speedbwram:
-	%transfer(Speed_Test_1_SA1,$6100)
-	pea $6000
-	pld
-	jsl $006100
-	pea $0000
-	pld
-	rts
-	
-speednew:
-	jsl Speed_Test_1_SA1
-	rts
 	
 Graphics:
 	incbin gfx.bin
@@ -453,271 +653,482 @@ HexDec:
 	BRA -
 +	RTS
 
-org $018000
-Speed_Test_1:
-	stz $3080
-	stz $3081
-	lda #$80
-	sta $2200
-	lda #$01
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $3080
-	lda #$40
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $3081
+sa1_clock:
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
 	
--	lda $3081			;\ wait for SA-1 CPU
-	bpl -				;/
-	
-	rtl
-	
-Speed_Test_2:
-	stz $3080
-	stz $3081
-	lda #$81
-	sta $2200
-	lda #$01
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $3080
-	lda #$40
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $3081
-	
--	lda $3081			;\ wait for SA-1 CPU
-	bpl -				;/
-	
-	rtl
-	
-Speed_Test_3:
-	stz $6080
-	stz $6081
-	lda #$82
-	sta $2200
-	lda #$01
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $6080
-	lda #$40
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $6081
-	
--	lda $6081			;\ wait for SA-1 CPU
-	bpl -				;/
-	
-	rep #$20
-	lda $6042
-	sta $3042
-	lda $6044
-	sta $3044
-	sep #$20
-	rtl
-	
-Speed_Test_4:
-	rep #$30
-	lda #$0200
-	sta $2181
-	stz $2183
-	lda #$8000
-	sta $4360
-	lda #$8000
-	sta $4362
-	stz $4364
-	ldy #$0080
-	sty $4365
-	sep #$20
+-	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+.end
 
-	stz $3080
-	stz $3081
-	lda #$80
-	sta $2200
-	lda #$01
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $3080
+sa1_clock_bwram:
+base $7f00
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
 	
-	lda #$40
--	bit $4212
-	sty $4365
-	sta $420b
-	bmi -
--	bit $4212
-	sty $4365
-	sta $420b
-	bpl -
--	bit $4212
-	sty $4365
-	sta $420b
-	bmi -
-	sta $3081
-	
--	lda $3081			;\ wait for SA-1 CPU
-	bpl -				;/
-	
-	sep #$10
-	rtl
-	
-Speed_Test_5:
-	rep #$30
-	lda #$0200
-	sta $2181
-	stz $2183
-	lda #$8000
-	sta $4360
-	lda #$8000
-	sta $4362
-	stz $4364
-	ldy #$0080
-	sty $4365
-	sep #$20
+-	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+.end
 
-	stz $3080
-	stz $3081
-	lda #$81
-	sta $2200
-	lda #$01
--	bit $4212
-	bmi -
--	bit $4212
-	bpl -
--	bit $4212
-	bmi -
-	sta $3080
+sa1_clock_iram:
+base $3600
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
 	
-	lda #$40
--	bit $4212
-	sty $4365
-	sta $420b
-	bmi -
--	bit $4212
-	sty $4365
-	sta $420b
-	bpl -
--	bit $4212
-	sty $4365
-	sta $420b
-	bmi -
-	sta $3081
+snes_clock_iram:
+-	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+sa1_clock_iram_end:
 	
--	lda $3081			;\ wait for SA-1 CPU
-	bpl -				;/
-	
-	sep #$10
-	rtl
-	
-Speed_Test_1_SA1:
-	rep #$20
-	stz $00
-	
--	lda $80
-	beq -
-	
+sa1_clock_finish:
+	stz $2250
+	sta $46
+	sta $2251
+	asl
+	lda.w #5908	; 8.16 fixed point. ==> 315.0 / 88.0 * 1000000 * 6 / (262 * 1364) * 15 / 10000 * 65536
+	sta $2253
+	ldy #$01
+	bcs +
 	lda #$0000
-	
--	bit $80
-	inc
-	bvc -
-	
-	inc #2
-	sta $00
-	
-	stz $02
-	stz $04
-	
-	ldx.b #27-1
--	lda $02
-	clc
-	adc $00
-	sta $02
-	lda $04
-	adc #$0000
-	sta $04
-	dex
-	bpl -
-	
-	rep #$10
-	ldx #$0000
--	lda $04
-	bne +
-	lda $02
-	cmp.w #500
-	bcc ++
-+	inx
-	lda $02
-	sec
-	sbc.w #500
-	sta $02
-	lda $04
-	sbc #$0000
-	sta $04
-	bra -
-++	beq +
-	inx
-+	
-	txa
-	sep #$10
-	sta $02
-	
-	lda.w #$0001
-	sta $2250
-	lda $02
-	sta $40
++	clc
+	adc $2308
+	cmp #$0000
+	clv
+	bpl +
+	sep #$40
++	sty $2250
 	sta $2251
 	lda.w #100
 	sta $2253
 	nop
-	bra $00
-	lda $2308
-	sta $42
+	xba
+	lda $2308	; YY.XX MHz
+	sta $42		; XX part
 	lda $2306
+	sta $44		; YY part
+
+	bvc +
+	lda #$63
+	sta $42
 	sta $44
++
 	
-	lda #$ffff
-	sta $80
+	sty $80		; data ready.
+	
+	stx $220b
+	cli
+	pla
+	pla
+	lda #$0000
+	rti
+	
+evil_nmi_sa1_3:
+	lda $3084
+	pha
+	pha
+	jmp sa1_clock_finish
+	
+org $018000
+
+Speed_Test_21:
+	rep #$20
+	ldx #$70
+-	lda #$1143
+	sta $4300,x
+	lda.w #hdma_tbl|$7f0000
+	sta $4302,x
+	lda.w #hdma_tbl|$7f0000>>8
+	sta $4304,x
 	sep #$20
+	lda.b #hdma_tbl|$7f0000>>16
+	sta $4307,x
+	txa
+	sec
+	sbc #$10
+	tax
+	rep #$20
+	bpl -
+	sep #$20
+	lda #$ff
+	sta $420c
+	phk
+	jsr Speed_Test_19
+	stz $420c
+	stz $4200
+	stz $0a01
 	rtl
-.end
+
+Speed_Test_20:
+	rep #$20
+	ldx #$70
+-	lda #$1143
+	sta $4300,x
+	lda.w #hdma_tbl|$7f0000
+	sta $4302,x
+	lda.w #hdma_tbl|$7f0000>>8
+	sta $4304,x
+	sep #$20
+	lda.b #hdma_tbl|$7f0000>>16
+	sta $4307,x
+	txa
+	sec
+	sbc #$10
+	tax
+	rep #$20
+	bpl -
+	sep #$20
+	lda #$ff
+	sta $420c
+	phk
+	jsr Speed_Test_18
+	stz $420c
+	stz $4200
+	stz $0a01
+	rtl
+
+; S-CPU test.
+Speed_Test_19:
+	stz $4200
 	
+	lda.b #NMI_code1-NMI_code0
+	sta $0a01
+	stz $3081
+	stz $3080
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	rep #$21
+	lda #$0000
+	ldx #$80
+	stx $4200
+	jmp.w snes_clock_iram
+	
+; S-CPU test.
+Speed_Test_18:
+	stz $4200
+	
+	lda.b #NMI_code1-NMI_code0
+	sta $0a01
+	stz $3081
+	stz $3080
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	rep #$21
+	lda #$0000
+	ldx #$80
+	stx $4200
+	
+-	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+
+Speed_Test_17:
+	%transfer(sa1_clock_iram, $3600)
+
+	rep #$20
+	lda #$3600
+	sta $2207
+	jmp Speed_Test_16_continue
+	
+Speed_Test_16:
+	rep #$20
+	lda #sa1_clock
+	sta $2207
+.continue
+	
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$8000
+	sta $4350
+	stz $4352
+	ldy #$c0
+	sty $4354
+	stz $4355
+	sep #$20
+	
+	stz $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	ldy #$20
+	lda #$80
+	sta $4200
+-	sty $4356
+	sty $420b
+	lda $3080
+	beq -
+	
+	stz $4200
+	stz $0a01
+	rtl
+
+hdma_tbl:
+	rep 224 : dl hdma_data_ptr<<8|$01
+	db $00
+hdma_data_ptr:
+	dw $0000, $0000
+
+Speed_Test_15:
+	stz $4200
+	
+	rep #$20
+	lda #sa1_clock
+	sta $2207
+	
+	
+	ldx #$70
+-	lda #$1143
+	sta $4300,x
+	lda.w #hdma_tbl|$7f0000
+	sta $4302,x
+	lda.w #hdma_tbl|$7f0000>>8
+	sta $4304,x
+	sep #$20
+	lda.b #hdma_tbl|$7f0000>>16
+	sta $4307,x
+	txa
+	sec
+	sbc #$10
+	tax
+	rep #$20
+	bpl -
+	sep #$20
+	bra Speed_Test_14_continue
+	
+Speed_Test_14:
+	stz $4200
+	
+	rep #$20
+	lda #sa1_clock
+	sta $2207
+	
+	
+	ldx #$70
+-	lda #$1143
+	sta $4300,x
+	lda.w #hdma_tbl
+	sta $4302,x
+	lda.w #hdma_tbl>>8
+	sta $4304,x
+	sep #$20
+	lda.b #hdma_tbl>>16
+	sta $4307,x
+	txa
+	sec
+	sbc #$10
+	tax
+	rep #$20
+	bpl -
+	sep #$20
+.continue
+	
+-	bit $4212
+	bpl -
+	lda #$ff
+	sta $420c
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$80
+	sta $4200
+-	lda $3080
+	beq -
+	stz $4200
+	stz $420c
+	stz $0a01
+	rtl
+
+Speed_Test_13:
+	%transfer(sa1_clock_bwram, $7f00)
+	%transfer(snes_test_bwram, $7e00)
+
+	rep #$20
+	lda #$7f00
+	sta $2207
+	sep #$20
+	
+	stz $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$80
+	sta $4200
+	
+	jsr $7e00
+	
+	stz $4200
+	stz $0a01
+	rtl
+	
+snes_test_bwram:
+-	rep 60 : lda #$00
+	lda $3080
+	beq -
+	rts
+.end
+
+Speed_Test_12:
+	%transfer(sa1_clock_iram, $3600)
+	%transfer(snes_test_iram, $3500)
+
+	rep #$20
+	lda #$3600
+	sta $2207
+	sep #$20
+	
+	stz $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+		
+	rep #$20
+	lda $3046
+	sta $402000
+	sep #$20
+	
+	lda #$80
+	sta $4200
+	
+	jsr $3500
+	
+	stz $4200
+	stz $0a01
+	rtl
+	
+snes_test_iram:
+-	rep 60 : lda #$00
+	lda $3080
+	beq -
+	rts
+.end
+
+Speed_Test_11:
+	%transfer(sa1_clock_iram, $3600)
+
+	rep #$20
+	lda #$3600
+	sta $2207
+	sep #$20
+	
+	stz $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$80
+	sta $4200
+-	lda $3080
+	beq -
+	stz $4200
+	stz $0a01
+	rtl
+	
+Speed_Test_10:
+	%transfer(sa1_clock_bwram, $7f00)
+
+	rep #$20
+	lda #$7f00
+	sta $2207
+	sep #$20
+	
+	stz $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$80
+	sta $4200
+-	lda $3080
+	beq -
+	stz $4200
+	stz $0a01
+	rtl
+
+Speed_Test_9:
+	rep #$20
+	lda #sa1_clock
+	sta $2207
+	sep #$20
+	
+	stz $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$80
+	sta $4200
+-	lda $3080
+	beq -
+	stz $4200
+	stz $0a01
+	rtl
+
 WriteASCII:
 	php
 	phb
 	phk
 	plb
 	sep #$30
--	bit $4212
-	bmi -
 -	bit $4212
 	bpl -
 	ldy #$00
@@ -735,19 +1146,11 @@ WriteASCII:
 	rtl
 	
 ASCIITable:
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; 00x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; 10x
-	db $29,$28,$00,$00,$00,$00,$00,$00,$2b,$2c,$00,$00,$25,$5C,$24,$00 ; 20x
-	db $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$34,$00,$00,$00,$00,$00 ; 30x
-	db $00,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E ; 40x
-	db $4F,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$00,$00,$00,$00,$00 ; 50x
-	db $00,$0a,$0b,$0c,$0d,$0e,$0f,$10,$11,$12,$13,$14,$15,$16,$17,$18 ; 60x
-	db $19,$1a,$1b,$1c,$1d,$1e,$1f,$20,$21,$22,$23,$00,$35,$00,$36,$00 ; 70x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; 80x
- 	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; 90x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; A0x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; B0x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; C0x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; D0x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; E0x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; F0x
+	db $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0a,$0b,$0c,$0d,$0e,$0f ; 0x
+	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; 1x
+	db $29,$63,$63,$3F,$5F,$37,$3D,$62,$2b,$2c,$3E,$00,$25,$5C,$24,$00 ; 2x
+	db $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$34,$00,$3A,$00,$3B,$00 ; 3x
+	db $00,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E ; 4x
+	db $4F,$64,$51,$52,$53,$54,$55,$56,$65,$66,$67,$39,$00,$38,$3C,$26 ; 5x
+	db $00,$0a,$0b,$0c,$0d,$0e,$0f,$10,$11,$12,$13,$14,$15,$16,$17,$18 ; 6x
+	db $19,$1a,$1b,$1c,$1d,$1e,$1f,$20,$21,$22,$23,$60,$35,$61,$36,$00 ; 7x

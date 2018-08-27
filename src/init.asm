@@ -18,14 +18,10 @@ setupsa1:
 	rep #$20
 	lda #SA1Reset
 	sta $2203
-	lda #SA1NMI
-	sta $2205
-	lda #SA1IRQ
-	sta $2207
 	lda #$0800
-	sta $220c
-	lda #$0A00
 	sta $220e
+	lda #$0A00
+	sta $220c
 	sep #$20
 	
 	stz $2224
@@ -61,52 +57,84 @@ initram:
 	db $00
 	
 initirqnmi:
-	%transfer(IRQ, $0800)
 	%transfer(NMI, $0A00)
 	rts
 	
-IRQ:
-	php
-	rep #$30
-	phb
-	phd
-	pha
-	phx
-	phy
-	phk
-	plb
-	sep #$30
-	
-	rep #$30
-	ply
-	plx
-	pla
-	pld
-	plb
-	plp
-	rti
-.end
-
 NMI:
-	php
-	rep #$30
-	phb
-	phd
-	pha
-	phx
-	phy
-	phk
-	plb
-	sep #$30
-	
-	inc $80
-	
-	rep #$30
-	ply
-	plx
-	pla
-	pld
-	plb
-	plp
+	bra .code0
+
+.code0
+	lda $4210	; 3x8 + 6 clocks
+	lda.b #.code3-.code0
+	sta $0a01
+	lda $3081
+	beq +
+	lda #$80
+	sta $2200
+-	lda $3081
+	beq -
+	rep #$20
+	lda #sa1_clock_finish
+	sta $2207
+	sep #$20
 	rti
+	
++	lda #$80
+	sta $2200
+-	lda $3081
+	beq -
+	lda.b #.code0-.code0
+	sta $0a01
+	rep #$20
+	lda #sa1_clock_finish
+	sta $2207
+	sep #$20
+	rti
+	
+.code1
+	ldx $4210
+	ldx.b #.code2-.code0
+	stx $0a01
+	lda #$0001
+	rti
+
+.code2
+	ldx $4210
+	ldx.b #.code0-.code0
+	stx $0a01
+	sta $3084
+	lda #evil_nmi_sa1_3
+	sta $2207
+	ldx #$80
+	stx $2200
+-	ldx $3080
+	beq -
+	pla
+	pla
+	cli
+	sep #$30
+	stz $4200
+	rtl
+
+.code3
+	; error handler...
+	sep #$10
+	ldx $4210
+	rep #$20
+	lda #$01fa
+	tcs
+	sep #$20
+	lda #$00
+	pha
+	plb
+	
+	stz $4200
+	stz $0a01
+	jsl recover
+	lda #$69
+	sta $3080
+	sta $3081
+	cli
+	rtl
+
 .end
