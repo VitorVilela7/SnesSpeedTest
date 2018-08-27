@@ -1,2 +1,2 @@
-@xkas sa1test.asm sa1test.sfc
+@xkas speed_test.asm speed_test.sfc
 @pause
