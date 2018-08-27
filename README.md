@@ -36,6 +36,11 @@ Version: 1.6
 
 ![no$sns](img/nosns16.png?raw=true "no$sns")
 
+### Snes9x for 3DS
+Version: 1.30 -- picture by LX5.
+
+![Snes9x for 3DS](img/snes9x_for_3ds_130.png?raw=true "Snes9x for 3DS")
+
 ### sd2snes
 To be tested.
 
