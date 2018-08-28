@@ -60,7 +60,7 @@ Version: v106r44
 ![bsnes](img/bsnesv106r44.png?raw=true "bsnes")
 
 ### sd2snes
-Version: 1.8.0 + RedGuy SA-1 v06
+Version: 1.8.0 + RedGuy SA-1 v06 -- picture by terminator2k2
 
 ![sd2snes](img/sd2snes06.jpg "sd2snes")
 
