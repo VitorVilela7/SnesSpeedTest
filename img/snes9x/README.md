@@ -1,3 +1,7 @@
+### Version 1.39
+![Snes9x 1.39](snes9x_1.39.png?raw=true "Snes9x 1.39")
+### Versions 1.40, 1.41 and 1.41.1
+![Snes9x 1.40-1.41.1](snes9x_1.40.png?raw=true "Snes9x 1.40-1.41.1")
 ### Versions 1.42 and 1.43
 ![Snes9x 1.42/1.43](snes9x_1.42.png?raw=true "Snes9x 1.42/1.43")
 ### Version 1.50
