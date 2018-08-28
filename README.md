@@ -67,6 +67,8 @@ Version: 1.8.0 + RedGuy SA-1 v06 -- picture by terminator2k2
 ### Snes9x
 Version: 1.56.2
 
+More versions can be found [here](img/snes9x).
+
 ![Snes9x](img/snes9x1562.png?raw=true "Snes9x")
 
 ### ZSNES
