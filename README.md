@@ -27,14 +27,11 @@ ROM|I-RAM|10.74 MHz
 WRAM|BW-RAM|5.37 MHz
 ROM|BW-RAM|5.37 MHz
 I-RAM|I-RAM|10.74 MHz
-BW-RAM|BW-RAM|<=5.37 MHz
+BW-RAM|BW-RAM|5.37 MHz
 HDMA ROM|ROM|Unknown, 8~10 MHz
 HDMA WRAM|ROM|10.74 MHz
 DMA ROM|ROM|Unknown, 5~9 MHz
 DMA ROM|I-RAM|10.74 MHz
-
-SNES Dev. Book II states about a possible "BW-RAM write buffer" that can be full
-and make the SA-1 CPU occasionally slower.
 
 There's two therioes about ROM <-> ROM bus conflict. One that will make SA-1 CPU
 always run at 5.37 MHz and another that makes only every fourth SA-1 cycle access
@@ -62,6 +59,11 @@ Version: v106r44
 
 ![bsnes](img/bsnesv106r44.png?raw=true "bsnes")
 
+### sd2snes
+Version: 1.8.0 + RedGuy SA-1 v06
+
+![sd2snes](img/sd2snes06.jpg "sd2snes")
+
 ### Snes9x
 Version: 1.56.2
 
@@ -69,6 +71,8 @@ Version: 1.56.2
 
 ### ZSNES
 Version: 1.51
+
+More versions can be found [here](img/zsnes).
 
 ![ZSNES](img/zsnes151.png?raw=true "ZSNES")
 
@@ -81,9 +85,6 @@ Version: 1.6
 Version: 1.30 -- picture by LX5.
 
 ![Snes9x for 3DS](img/snes9x_for_3ds_130.png?raw=true "Snes9x for 3DS")
-
-### sd2snes
-To be tested.
 
 ### Real hardware
 To be tested.
