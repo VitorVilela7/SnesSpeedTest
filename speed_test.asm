@@ -600,10 +600,9 @@ SA1Reset:
 	plb
 	sep #$30
 	
-	lda #$50
-	sta $2209
+	stz $2209
 	
-	lda #$f0
+	lda #$b0
 	sta $220b
 	sta $220a
 	

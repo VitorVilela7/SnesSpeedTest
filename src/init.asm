@@ -18,10 +18,8 @@ setupsa1:
 	rep #$20
 	lda #SA1Reset
 	sta $2203
-	lda #$0800
-	sta $220e
-	lda #$0A00
-	sta $220c
+	sta $2207
+	sta $2205
 	sep #$20
 	
 	stz $2224
