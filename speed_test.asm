@@ -863,11 +863,11 @@ Speed_Test_16:
 	ldy #$00
 	sty $2183
 	lda #$8000
-	sta $4350
-	stz $4352
+	sta $4320
+	stz $4322
 	ldy #$c0
-	sty $4354
-	stz $4355
+	sty $4324
+	stz $4325
 	sep #$20
 	
 	stz $4200
@@ -880,10 +880,11 @@ Speed_Test_16:
 	stz $3080
 	stz $3081
 	
-	ldy #$20
+	ldy #$04
 	lda #$80
 	sta $4200
--	sty $4356
+-	sty $4326
+	sty $2182
 	sty $420b
 	lda $3080
 	beq -
