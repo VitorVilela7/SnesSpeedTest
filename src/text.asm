@@ -101,7 +101,7 @@ printinittext:
 	rts
 	
 		;   0123456789abcdef0123456789abcdef
-.string		db "<__{SNES-SA1 Speed Test v3.0}__>",$ff
+.string		db "<__{SNES-SA1 Speed Test v3.1}__>",$ff
 .string1	db "|Current Operation             |",$ff
 .string2	db "#__________&_______&___________$",$ff
 .string3	db "|   SNES   |  SA-1 |   Speed   |",$ff
