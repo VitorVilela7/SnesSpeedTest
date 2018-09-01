@@ -11,4 +11,4 @@ Thanks ikari_01 for the picture and testing on hardware.
 ![1L3B-20](1L3B-20.jpg?raw=true "1L3B-20")
 
 ##### 1-CHIP version:
-![1L3B-201-CHIP](1L3B-20-1CHIP?raw=true "1L3B-20 (1-CHIP)")
+![1L3B-201-CHIP](1L3B-20-1CHIP.jpg?raw=true "1L3B-20 (1-CHIP)")

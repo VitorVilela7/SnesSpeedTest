@@ -79,6 +79,7 @@ channels in parallel, for every frame.
 
 ### Real hardware
 Tested against Speed Test version 3.1
+
 More can be found [here](img/hardware).
 
 #### 1L8B-10
