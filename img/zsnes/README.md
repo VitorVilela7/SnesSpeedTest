@@ -1,3 +1,5 @@
+### Version 1.51 (speed test v3.2)
+![ZSNES](zsnes151_v32.png?raw=true "ZSNES")
 ### Version 1.51
 ![ZSNES](zsnes151.png?raw=true "ZSNES")
 ### Version 1.50
