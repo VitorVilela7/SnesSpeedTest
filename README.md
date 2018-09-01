@@ -78,7 +78,16 @@ channels in parallel, for every frame.
 ## Current Results
 
 ### Real hardware
+Tested against Speed Test version 3.1
+More can be found [here](img/hardware).
 
+#### 1L8B-10
+Thanks QcRetro for the picture and testing on hardware.
+![1L8B-10](img/hardware/1L8B-10.jpg?raw=true "1L8B-10")
+
+#### 1L3B-20
+Thanks ikari_01 for the picture and testing on hardware.
+![1L3B-20](img/hardware/1L3B-20.jpg?raw=true "1L3B-20")
 
 ### bsnes
 Version: v106r44
@@ -114,5 +123,3 @@ Version: 1.30 -- picture by LX5.
 
 ![Snes9x for 3DS](img/snes9x_for_3ds_130.png?raw=true "Snes9x for 3DS")
 
-### Real hardware
-To be tested.
