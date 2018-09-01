@@ -913,7 +913,7 @@ Speed_Test_15:
 	lda.w #hdma_tbl|$7f0000
 	sta $4302,x
 	lda.w #hdma_tbl|$7f0000>>8
-	sta $4304,x
+	sta $4303,x
 	sep #$20
 	lda.b #hdma_tbl|$7f0000>>16
 	sta $4307,x
@@ -940,7 +940,7 @@ Speed_Test_14:
 	lda.w #hdma_tbl
 	sta $4302,x
 	lda.w #hdma_tbl>>8
-	sta $4304,x
+	sta $4303,x
 	sep #$20
 	lda.b #hdma_tbl>>16
 	sta $4307,x
