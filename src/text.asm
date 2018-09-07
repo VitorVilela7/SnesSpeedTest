@@ -43,14 +43,23 @@ printendtext:
 	jsl WriteASCII
 	
 	sep #$20
-	lda $230e
+	lda $bf230e
 	lsr #4
 	sta $2118
 	stz $2119
-	lda $230e
+	lda $bf230e
 	and #$0f
 	sta $2118
 	stz $2119
+	lda $300f
+	lsr #4
+	sta $2118
+	stz $2119
+	lda $300f
+	and #$0f
+	sta $2118
+	stz $2119
+	
 	
 	rep #$20
 	
@@ -68,7 +77,7 @@ printendtext:
 		db "| 5C77 VER: 0",$ff
 .string2	db                  "h'! 5C78 VER: 0",$ff
 .string3	db "h|| 5A22 VER: 0",$ff
-.string4	db                 "h'! SA-1 VER: ",$ff
+.string4	db                 "h'! SA1 VER:",$ff
 .string5	db                             "h|"
 		db "[______________YZ______________]"
 
@@ -101,7 +110,7 @@ printinittext:
 	rts
 	
 		;   0123456789abcdef0123456789abcdef
-.string		db "<__{SNES-SA1 Speed Test v3.2}__>",$ff
+.string		db "<__{SNES-SA1 Speed Test v3.5}__>",$ff
 .string1	db "|Current Operation             |",$ff
 .string2	db "#__________&_______&___________$",$ff
 .string3	db "|   SNES   |  SA-1 |   Speed   |",$ff

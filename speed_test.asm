@@ -633,6 +633,9 @@ SA1Reset:
 
 	cli
 	
+	lda $9f230e
+	sta $300f
+	
 	; stay 16-bit A
 	lda #$0000
 	ldx #$f0 ; clear irq
