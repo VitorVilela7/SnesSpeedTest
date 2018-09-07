@@ -879,14 +879,21 @@ Speed_Test_16:
 	
 	stz $3080
 	stz $3081
-	
+
 	ldy #$04
 	lda #$80
 	sta $4200
+	lda #$00		; \ Wait for timer over.
+	
 -	sty $4326
 	sty $2182
 	sty $420b
-	lda $3080
+	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+	
+-	lda $3080
 	beq -
 	
 	stz $4200
@@ -965,8 +972,16 @@ Speed_Test_14:
 	
 	lda #$80
 	sta $4200
+	
+	lda #$00		; \ Wait for timer over.
+-	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+
 -	lda $3080
 	beq -
+
 	stz $4200
 	stz $420c
 	stz $0a01
@@ -1001,10 +1016,17 @@ Speed_Test_13:
 	rtl
 	
 snes_test_bwram:
--	rep 60 : lda #$00
-	lda $3080
+base $7e00
+	lda #$00		; \ Wait for timer over.
+-	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+
+-	lda $3080
 	beq -
 	rts
+base off
 .end
 
 Speed_Test_12:
@@ -1041,10 +1063,17 @@ Speed_Test_12:
 	rtl
 	
 snes_test_iram:
--	rep 60 : lda #$00
-	lda $3080
+base $3500
+	lda #$00		; \ Wait for timer over.
+-	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+
+-	lda $3080
 	beq -
 	rts
+base off
 .end
 
 Speed_Test_11:
@@ -1067,6 +1096,13 @@ Speed_Test_11:
 	
 	lda #$80
 	sta $4200
+	
+	lda #$00		; \ Wait for timer over.
+-	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+	
 -	lda $3080
 	beq -
 	stz $4200
@@ -1093,6 +1129,13 @@ Speed_Test_10:
 	
 	lda #$80
 	sta $4200
+	
+	lda #$00		; \ Wait for timer over.
+-	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+
 -	lda $3080
 	beq -
 	stz $4200
@@ -1117,6 +1160,14 @@ Speed_Test_9:
 	
 	lda #$80
 	sta $4200
+	
+	lda #$00		; \ Wait for timer over.
+-	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+
+	
 -	lda $3080
 	beq -
 	stz $4200

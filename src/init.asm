@@ -75,6 +75,7 @@ NMI:
 	lda #sa1_clock_finish
 	sta $2207
 	sep #$20
+	lda #$ff
 	rti
 	
 +	lda #$80
@@ -87,6 +88,7 @@ NMI:
 	lda #sa1_clock_finish
 	sta $2207
 	sep #$20
+	lda #$00
 	rti
 	
 .code1
