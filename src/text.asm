@@ -149,7 +149,7 @@ printinittext:
 		;   0123456789abcdef0123456789abcdef
 .string		db "<__{SNES-SA1 Speed Test v4.0}__>"
 		db "|Current Operation    PAGE ",$ff
-.string1	db                             "/2 |",$ff
+.string1	db                             "/4 |",$ff
 .string2	db "#__________&_________&_________$",$ff
 .string3	db "|   SNES   |   SA-1  |Speed@MHz|",$ff
 ;;;;;;;;;;;;;;;;;;;;|DMA BW-RAM|DMA ROM
