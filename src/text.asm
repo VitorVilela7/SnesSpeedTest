@@ -115,6 +115,12 @@ printinittext:
 	stz $02
 	jsl WriteASCII
 	
+	ldx $fe
+	inx
+	stx $2118
+	ldx #$00
+	stx $2119
+	
 	lda #.string1
 	sta $00
 	stz $02
@@ -135,8 +141,9 @@ printinittext:
 	rts
 	
 		;   0123456789abcdef0123456789abcdef
-.string		db "<__{SNES-SA1 Speed Test v3.5}__>",$ff
-.string1	db "|Current Operation             |",$ff
+.string		db "<__{SNES-SA1 Speed Test v3.5}__>"
+		db "|Current Operation    PAGE ",$ff
+.string1	db                             "/1 |",$ff
 .string2	db "#__________&_______&___________$",$ff
 .string3	db "|   SNES   |  SA-1 |   Speed   |",$ff
 ;;;;;;;;;;;;;;;;;;;;|DMA BW-RAM|DMA ROM
