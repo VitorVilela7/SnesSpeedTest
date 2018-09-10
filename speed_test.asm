@@ -234,37 +234,64 @@ macro transfer(label, ram)
 	plb
 endmacro
 
-.SeeAgain
+	stz $ff ; current test
+	stz $fe ; current page
+
+.loop_back
 	%cursor_pos(0) : jsr printinittext
 	
 	rep #$20
 	lda #$4080
 	sta $2116
 	sep #$30
-	%cursor_pos(1) : jsr test_rom
-	%cursor_pos(2) : jsr test_rom_parallel
-	%cursor_pos(3) : jsr test_iram
-	%cursor_pos(4) : jsr test_iram_rom
-	%cursor_pos(5) : jsr test_bwram
-	%cursor_pos(6) : jsr test_bwram_rom
-	%cursor_pos(7) : jsr test_iram_iram
-	%cursor_pos(8) : jsr test_bwram_bwram
-	%cursor_pos(9) : jsr test_hdma_rom
-	%cursor_pos(10) : jsr test_hdma_wram
-	%cursor_pos(11) : jsr test_dma_rom
-	%cursor_pos(12) : jsr test_dma_iram
-	%cursor_pos(14) : jsr test_scpu_rom
-	%cursor_pos(15) : jsr test_scpu_wram
-	%cursor_pos(16) : jsr test_scpu_iram
-	%cursor_pos(18) : jsr test_scpu_hdma_rom
-	%cursor_pos(19) : jsr test_scpu_hdma_wram
-	%cursor_pos(20) : jsr test_scpu_hdma_iram
 	
+.current_test
+	lda $ff
+	tax
+	clc
+	adc #$03
+	sta $ff
+	
+	lda test_table,x
+	eor #$ff
+	beq .end
+	inc
+	asl #3
+	sec
+	sbc #$1c
+	sta $2110
+	lda #$ff
+	sta $2110
+	
+	jsr (test_table+1,x)
+	jmp .current_test
+	
+.end
 	jsr printendtext
+	stz $ff
 	
-	sep #$20
+	jmp .loop_back
 	
-	jmp .SeeAgain
+test_table:
+	db 1 : dw test_rom
+	db 2 : dw test_rom_parallel
+	db 3 : dw test_iram
+	db 4 : dw test_iram_rom
+	db 5 : dw test_bwram
+	db 6 : dw test_bwram_rom
+	db 7 : dw test_iram_iram
+	db 8 : dw test_bwram_bwram
+	db 9 : dw test_hdma_rom
+	db 10 : dw test_hdma_wram
+	db 11 : dw test_dma_rom
+	db 12 : dw test_dma_iram
+	db 14 : dw test_scpu_rom
+	db 15 : dw test_scpu_wram
+	db 16 : dw test_scpu_iram
+	db 18 : dw test_scpu_hdma_rom
+	db 19 : dw test_scpu_hdma_wram
+	db 20 : dw test_scpu_hdma_iram
+	db $FF ; end.
 
 ; attempts to recover after a crash.
 
