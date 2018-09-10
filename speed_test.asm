@@ -237,6 +237,8 @@ endmacro
 
 	stz $ff ; current test
 	stz $fe ; current page
+	lda #$ff
+	sta $fd ; last controller state
 
 .loop_back
 	%cursor_pos(0) : jsr printinittext
@@ -247,13 +249,24 @@ endmacro
 	sep #$30
 	
 .current_test
-	lda $ff
+	jsr .joy_test
+	bcs .new_page
+	
+	lda $fe
+	asl
 	tax
+	lda test_table+1,x
+	sta $01
+	lda test_table,x
+	sta $00
+
+	lda $ff
+	tay
 	clc
 	adc #$03
 	sta $ff
 	
-	lda test_table,x
+	lda ($00),y
 	eor #$ff
 	beq .end
 	inc
@@ -264,16 +277,83 @@ endmacro
 	lda #$ff
 	sta $2110
 	
-	jsr (test_table+1,x)
-	jmp .current_test
+	iny
+	lda ($00),y
+	sta $02
+	iny
+	lda ($00),y
+	sta $03
 	
+	pea.w .current_test-1
+	jmp ($0002)
+
 .end
 	jsr printendtext
 	stz $ff
 	
 	jmp .loop_back
+.new_page
+-	bit $4212
+	bmi -
+-	bit $4212
+	bpl -
+	
+	rep #$20
+	lda #$4000
+	sta $2116
+	lda #$1809
+	sta $4300
+	lda #$8000
+	sta $4302
+	stz $4304
+	lda #$0800
+	sta $4305
+	ldy #$01
+	sty $420b
+	sep #$20
+	
+	lda #$01
+	sta $4200
+	
+	stz $ff
+	jmp .loop_back
+	
+.joy_test
+	sec
+	lda $4219
+	eor #$ff
+	tax
+	eor #$ff
+	and $fd
+	stx $fd
+	bit #$01
+	bne .right
+	bit #$02
+	bne .left
+	clc
+	rts
+	
+.left
+	lda $fe
+	dec
+	bmi +
+	sta $fe
++	rts
+
+.right
+	lda $fe
+	inc
+	cmp #$02
+	beq +
+	sta $fe
++	sec
+	rts
 	
 test_table:
+	dw test_table_page1
+	dw test_table_page2
+	
+test_table_page1:
 	db 1 : dw test_rom
 	db 2 : dw test_rom_parallel
 	db 3 : dw test_iram
@@ -292,6 +372,9 @@ test_table:
 	db 18 : dw test_scpu_hdma_rom
 	db 19 : dw test_scpu_hdma_wram
 	db 20 : dw test_scpu_hdma_iram
+	db $FF ; end.
+	
+test_table_page2:
 	db $FF ; end.
 
 ; attempts to recover after a crash.

@@ -104,7 +104,7 @@ printendtext:
 .string3	db "h|| 5A22 VER: 0",$ff
 .string4	db                 "h'!SA-1 VER:",$ff
 .string5	db                             "h|"
-		db "[______________YZ______________]"
+		db "[______________YZ______________]",$ff
 
 printinittext:
 	rep #$20
@@ -143,7 +143,7 @@ printinittext:
 		;   0123456789abcdef0123456789abcdef
 .string		db "<__{SNES-SA1 Speed Test v3.5}__>"
 		db "|Current Operation    PAGE ",$ff
-.string1	db                             "/1 |",$ff
+.string1	db                             "/2 |",$ff
 .string2	db "#__________&_______&___________$",$ff
 .string3	db "|   SNES   |  SA-1 |   Speed   |",$ff
 ;;;;;;;;;;;;;;;;;;;;|DMA BW-RAM|DMA ROM
