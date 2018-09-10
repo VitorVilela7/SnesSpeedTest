@@ -354,27 +354,47 @@ test_table:
 	dw test_table_page2
 	
 test_table_page1:
-	db 1 : dw test_rom
-	db 2 : dw test_rom_parallel
-	db 3 : dw test_iram
-	db 4 : dw test_iram_rom
-	db 5 : dw test_bwram
-	db 6 : dw test_bwram_rom
-	db 7 : dw test_iram_iram
-	db 8 : dw test_bwram_bwram
-	db 9 : dw test_hdma_rom
-	db 10 : dw test_hdma_wram
-	db 11 : dw test_dma_rom
-	db 12 : dw test_dma_iram
-	db 14 : dw test_scpu_rom
-	db 15 : dw test_scpu_wram
-	db 16 : dw test_scpu_iram
-	db 18 : dw test_scpu_hdma_rom
-	db 19 : dw test_scpu_hdma_wram
-	db 20 : dw test_scpu_hdma_iram
+	db 1 : dw test_rom			; WRAM ROM
+	db 2 : dw test_rom_parallel		; ROM ROM
+	db 3 : dw test_iram			; WRAM IRAM
+	db 4 : dw test_iram_rom			; ROM IRAM
+	db 5 : dw test_bwram			; WRAM BWRAM
+	db 6 : dw test_bwram_rom		; ROM BWRAM
+	db 7 : dw test_iram_iram		; IRAM IRAM
+	db 8 : dw test_bwram_bwram		; BWRAM BWRAM
+	db 9 : dw test_hdma_rom			; HDMA-ROM ROM
+	db 10 : dw test_hdma_wram		; HDMA-WRAM ROM
+	db 11 : dw test_dma_rom			; DMA-ROM ROM
+	db 12 : dw test_dma_iram		; DMA-ROM IRAM
+	db 14 : dw test_scpu_rom		; SCPU ROM
+	db 15 : dw test_scpu_wram		; SCPU WRAM
+	db 16 : dw test_scpu_iram		; SCPU IRAM
+	db 18 : dw test_scpu_hdma_rom		; SCPU ROM
+	db 19 : dw test_scpu_hdma_wram		; SCPU WRAM
+	db 20 : dw test_scpu_hdma_iram		; SCPU IRAM
 	db $FF ; end.
 	
 test_table_page2:
+	db 1 : dw test_rom_o			; WRAM ROM (odd address)
+	db 2 : dw test_rom_parallel_o		; ROM ROM (odd address)
+	db 3 : dw test_rom_16			; WRAM ROM (16 clock)
+	db 4 : dw test_rom_parallel_16		; ROM ROM (16 clock)
+	db 5 : dw test_rom_16o			; WRAM ROM (16 clock odd)
+	db 6 : dw test_rom_parallel_16o		; ROM ROM (16 clock odd)
+	db 7 : dw test_iram_iram_o		; IRAM IRAM (odd address)
+	db 8 : dw test_bwram_bwram_o		; BWRAM BWRAM (odd address)
+	db 9 : dw test_iram_iram_16		; IRAM IRAM (16 clock)
+	db 10 : dw test_bwram_bwram_16		; BWRAM BWRAM (16 clock)
+	db 11 : dw test_iram_iram_16o		; IRAM IRAM (16 clock odd)
+	db 12 : dw test_bwram_bwram_16o		; BWRAM BWRAM (16 clock odd)
+	db 13 : dw test_wram_rom_mmio		; WRAM ROM-MMIO
+	db 14 : dw test_rdma_mmio		; RDMA-MMIO ROM-MMIO
+	db 15 : dw test_wdma_mmio		; WDMA-MMIO ROM-MMIO
+	db 16 : dw test_wdma_mmio2		; WDMA-MMIO ROM-MMIO 2 (targets $2223)
+	db 17 : dw test_rdma_iram		; RDMA-IRAM IRAM
+	db 18 : dw test_wdma_iram		; WDMA-IRAM IRAM
+	db 19 : dw test_rdma_bwram		; WDMA-BWRAM BWRAM
+	db 20 : dw test_wdma_bwram		; WDMA-BWRAM BWRAM
 	db $FF ; end.
 
 ; attempts to recover after a crash.
@@ -477,7 +497,27 @@ write_text:
 	rts
 	
 .no_error
+	ldx $3046
+	stx $2118
+	stz $2119
+
 	lda $3044
+	jsr HexDec
+	
+	; high number
+	stx $2118
+	stz $2119
+	
+	; dot [.]
+	ldx #$24
+	stx $2118
+	stz $2119
+	
+	; low number
+	sta $2118
+	stz $2119
+	
+	lda $3042
 	jsr HexDec
 	
 	; high number
@@ -488,12 +528,8 @@ write_text:
 	sta $2118
 	stz $2119
 	
-	; dot [.]
-	lda #$24
-	sta $2118
-	stz $2119
-	
-	lda $3042
+	; extra digit.
+	lda $3048
 	jsr HexDec
 	
 	; high number
@@ -515,7 +551,133 @@ write_text:
 	rts
 	
 .error_text
-	db "  ERROR   |",$ff
+	db " FAILED |",$ff
+	
+test_rdma_iram:			; RDMA-IRAM IRAM
+	jsl Speed_Test_26|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|RDMA I-RAM|  I-RAM  |~",$ff
+
+test_wdma_iram:			; WDMA-IRAM IRAM
+	jsl Speed_Test_27|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|WDMA I-RAM|  I-RAM  |~",$ff
+
+test_rdma_bwram:		; WDMA-BWRAM BWRAM
+	jsl Speed_Test_28|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|RDMA BWRAM| BW-RAM  |~",$ff
+
+test_wdma_bwram:		; WDMA-BWRAM BWRAM
+	jsl Speed_Test_29|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|WDMA BWRAM| BW-RAM  |~",$ff
+	
+test_wram_rom_mmio:		; WRAM ROM-MMIO
+	jsl Speed_Test_22|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   WRAM   |ROM MMIO | ",$ff
+
+test_rdma_mmio:			; RDMA-MMIO ROM-MMIO
+	jsl Speed_Test_23|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| RDMA MMIO|ROM MMIO |~",$ff
+
+test_wdma_mmio:			; WDMA-MMIO ROM-MMIO
+	jsl Speed_Test_24|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| WDMA MMIO|ROM MMIO |~",$ff
+	
+test_wdma_mmio2:		; WDMA-MMIO ROM-MMIO (targets $2223)
+	jsl Speed_Test_25|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "| WDMA SMMC|ROM MMIO |~",$ff
+	
+test_rom_o:
+	jsl Speed_Test_8|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   WRAM   | ROM-ODD | ",$ff
+
+test_rom_parallel_o:
+	jsl Speed_Test_8
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   ROM    | ROM-ODD | ",$ff
+
+test_rom_16:
+	jsl Speed_Test_7|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   WRAM   | ROM-16C | ",$ff
+
+test_rom_parallel_16o:
+	jsl Speed_Test_6
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   ROM    | ROM-16O | ",$ff
+
+test_rom_16o:
+	jsl Speed_Test_6|$7f0000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   WRAM   | ROM-16O | ",$ff
+
+test_rom_parallel_16:
+	jsl Speed_Test_7
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|   ROM    | ROM-16C | ",$ff
 	
 test_rom:
 	jsl Speed_Test_9|$7f0000
@@ -524,7 +686,7 @@ test_rom:
 	jsr write_text
 	rts
 	
-.str	db "|   WRAM   |  ROM  | ",$ff
+.str	db "|   WRAM   |   ROM   | ",$ff
 
 test_rom_parallel:
 	jsl Speed_Test_9
@@ -533,7 +695,7 @@ test_rom_parallel:
 	jsr write_text
 	rts
 	
-.str	db "|   ROM    |  ROM  | ",$ff
+.str	db "|   ROM    |   ROM   | ",$ff
 
 test_bwram:
 	jsl Speed_Test_10|$7f0000
@@ -542,7 +704,7 @@ test_bwram:
 	jsr write_text
 	rts
 	
-.str	db "|   WRAM   |BW-RAM | ",$ff
+.str	db "|   WRAM   |  BW-RAM | ",$ff
 
 test_bwram_rom:
 	jsl Speed_Test_10
@@ -551,7 +713,7 @@ test_bwram_rom:
 	jsr write_text
 	rts
 	
-.str	db "|   ROM    |BW-RAM | ",$ff
+.str	db "|   ROM    |  BW-RAM | ",$ff
 
 test_iram:
 	jsl Speed_Test_11|$7f0000
@@ -560,7 +722,7 @@ test_iram:
 	jsr write_text
 	rts
 	
-.str	db "|   WRAM   | I-RAM | ",$ff
+.str	db "|   WRAM   |  I-RAM  | ",$ff
 
 test_iram_rom:
 	jsl Speed_Test_11
@@ -569,7 +731,7 @@ test_iram_rom:
 	jsr write_text
 	rts
 	
-.str	db "|   ROM    | I-RAM | ",$ff
+.str	db "|   ROM    |  I-RAM  | ",$ff
 
 test_iram_iram:
 	jsl Speed_Test_12
@@ -578,7 +740,7 @@ test_iram_iram:
 	jsr write_text
 	rts
 	
-.str	db "|  I-RAM   | I-RAM | ",$ff
+.str	db "|  I-RAM   |  I-RAM  | ",$ff
 
 test_bwram_bwram:
 	jsl Speed_Test_13
@@ -587,7 +749,63 @@ test_bwram_bwram:
 	jsr write_text
 	rts
 	
-.str	db "|  BW-RAM  |BW-RAM | ",$ff
+.str	db "|  BW-RAM  |  BW-RAM | ",$ff
+
+test_iram_iram_o:
+	jsl Speed_Test_4;12
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  I-RAM   | I-RAM-O | ",$ff
+
+test_bwram_bwram_o:
+	jsl Speed_Test_5;13
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  BW-RAM  | BW-RAM-O| ",$ff
+
+test_iram_iram_16:
+	jsl Speed_Test_2;12
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  I-RAM   | I-RAM16C| ",$ff
+
+test_bwram_bwram_16:
+	jsl Speed_Test_3;13
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  BW-RAM  |BW-RAM16C| ",$ff
+
+test_iram_iram_16o:
+	jsl Speed_Test_0;12
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  I-RAM   | I-RAM16O| ",$ff
+
+test_bwram_bwram_16o:
+	jsl Speed_Test_1;13
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|  BW-RAM  |BW-RAM16O| ",$ff
+
+
 
 test_hdma_rom:
 	jsl Speed_Test_14|$7f0000
@@ -596,7 +814,7 @@ test_hdma_rom:
 	jsr write_text
 	rts
 	
-.str	db "| HDMA ROM |  ROM  | ",$ff
+.str	db "| HDMA ROM |   ROM   | ",$ff
 
 test_hdma_wram:
 	jsl Speed_Test_15|$7f0000
@@ -605,7 +823,7 @@ test_hdma_wram:
 	jsr write_text
 	rts
 	
-.str	db "| HDMA WRAM|  ROM  | ",$ff
+.str	db "| HDMA WRAM|   ROM   | ",$ff
 
 test_dma_rom:
 	jsl Speed_Test_16|$7f0000
@@ -614,7 +832,7 @@ test_dma_rom:
 	jsr write_text
 	rts
 	
-.str	db "| DMA ROM  |  ROM  |~",$ff
+.str	db "| DMA ROM  |   ROM   |~",$ff
 
 test_dma_iram:
 	jsl Speed_Test_17|$7f0000
@@ -623,7 +841,7 @@ test_dma_iram:
 	jsr write_text
 	rts
 	
-.str	db "| DMA ROM  | I-RAM |~",$ff
+.str	db "| DMA ROM  |  I-RAM  |~",$ff
 
 test_scpu_rom:
 	jsl Speed_Test_18
@@ -638,10 +856,10 @@ test_scpu_rom:
 	jsr write_text
 	rts
 	
-.str	db "| S-CPU   ROM Speed| ",$ff
+.str	db "| S-CPU   ROM Access | ",$ff
 
 	;   0123456789abcdef0123456789abcdef
-.string	db "#__________*_______%___________$",$ff
+.string	db "#__________*_________%_________$",$ff
 
 test_scpu_wram:
 	jsl Speed_Test_18|$7f0000
@@ -650,7 +868,7 @@ test_scpu_wram:
 	jsr write_text
 	rts
 	
-.str	db "| S-CPU  WRAM Speed| ",$ff
+.str	db "| S-CPU  WRAM Access | ",$ff
 
 test_scpu_iram:
 	jsl Speed_Test_19
@@ -659,7 +877,7 @@ test_scpu_iram:
 	jsr write_text
 	rts
 	
-.str	db "| S-CPU I-RAM Speed| ",$ff
+.str	db "| S-CPU I-RAM Access | ",$ff
 
 test_scpu_hdma_rom:
 	jsl Speed_Test_20
@@ -674,10 +892,10 @@ test_scpu_hdma_rom:
 	jsr write_text
 	rts
 	
-.str	db "| S-CPU   ROM Speed| ",$ff
+.str	db "| S-CPU   ROM Access | ",$ff
 
 	;   0123456789abcdef0123456789abcdef
-.string	db "#_____________{HDMA#___________$",$ff
+.string	db "#_____________{HDMA  #_________$",$ff
 
 test_scpu_hdma_wram:
 	jsl Speed_Test_20|$7f0000
@@ -686,7 +904,7 @@ test_scpu_hdma_wram:
 	jsr write_text
 	rts
 	
-.str	db "| S-CPU  WRAM Speed| ",$ff
+.str	db "| S-CPU  WRAM Access | ",$ff
 
 test_scpu_hdma_iram:
 	jsl Speed_Test_21
@@ -695,7 +913,7 @@ test_scpu_hdma_iram:
 	jsr write_text
 	rts
 	
-.str	db "| S-CPU I-RAM Speed| ",$ff
+.str	db "| S-CPU I-RAM Access | ",$ff
 	
 SA1Reset:
 	sei
@@ -772,12 +990,74 @@ HexDec:
 	BRA -
 +	RTS
 
+sa1_clock_mmio:
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+print "ROM test position (should be even): $", pc
+
+-	bit $2306	; 5 cycles     \ 16 cycles
+	bit $2308	; 5 cycles      |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+.end
+
 sa1_clock:
 	stx $81		; \ "small insignificant noise"
 	stx $220b	;  |
 	cli		; /
 	
+print "ROM test position (should be even): $", pc
+
 -	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+.end
+
+sa1_clock_odd:
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+print "ROM test position (should be odd):  $", pc
+
+-	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+.end
+
+sa1_clock_16:
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+print "ROM test position (should be even): $", pc
+
+-	cpx #$ff	; 2 mem cycles \ 16 cycles
+	cpx #$ff	; 2 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+.end
+
+
+NOP	; shift.
+
+sa1_clock_16_odd:
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+print "ROM test position (should be odd):  $", pc
+
+-	cpx #$ff	; 2 mem cycles \ 16 cycles
+	cpx #$ff	; 2 mem cycles  |
 	adc #$0000	; 3 mem cycles  |
 	adc #$0000	; 3 mem cycles  |
 	adc #$0001	; 3 mem cycles  |
@@ -812,42 +1092,157 @@ snes_clock_iram:
 	jmp -		; 3 mem cycles /
 base off
 sa1_clock_iram_end:
+
+sa1_clock_bwram_odd:
+base $7f01
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
 	
-sa1_clock_finish:
+-	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+.end
+
+sa1_clock_iram_odd:
+base $3601
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+-	adc #$0000	; 3 mem cycles \ 15 cycles
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+sa1_clock_iram_odd_end:
+
+sa1_clock_bwram_16:
+base $7f00
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+-	cpx #$ff	; 2 mem cycles \ 16 cycles
+	cpx #$ff	; 2 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+.end
+
+sa1_clock_iram_16:
+base $3600
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+-	cpx #$ff	; 2 mem cycles \ 16 cycles
+	cpx #$ff	; 2 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+.end
+
+sa1_clock_bwram_16o:
+base $7f01
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+-	cpx #$ff	; 2 mem cycles \ 16 cycles
+	cpx #$ff	; 2 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+.end
+
+sa1_clock_iram_16o:
+base $3601
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+-	cpx #$ff	; 2 mem cycles \ 16 cycles
+	cpx #$ff	; 2 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0000	; 3 mem cycles  |
+	adc #$0001	; 3 mem cycles  |
+	jmp -		; 3 mem cycles /
+base off
+.end
+
+sa1_clock_finish_16:
 	stz $2250
+	inc
 	sta $46
 	sta $2251
 	asl
-	lda.w #5908	; 8.16 fixed point. ==> 315.0 / 88.0 * 1000000 * 6 / (262 * 1364) * 15 / 10000 * 65536
+	lda.w #63018	; 8.16 fixed point. ==> 315.0 / 88.0 * 1000000 * 6 / (262 * 1364) * 16 / 1000 * 65536
+	bra sa1_clock_finish_continue
+	
+sa1_clock_finish:
+	stz $2250
+	inc
+	sta $46
+	sta $2251
+	asl
+	lda.w #59079	; 8.16 fixed point. ==> 315.0 / 88.0 * 1000000 * 6 / (262 * 1364) * 15 / 1000 * 65536
+.continue		; +/- 0.9 kHz resolution (or 0.00090 MHz)
 	sta $2253
 	ldy #$01
 	bcs +
-	lda #$0000
-+	clc
+	lda $46
++	ldx $2307
+	stx $48
+	ldx $2306
+	clc
 	adc $2308
-	cmp #$0000
-	clv
-	bpl +
-	sep #$40
-+	sty $2250
+	sty $2250
+	sta $2251
+	lda.w #10000
+	sta $2253
+	nop
+	xba
+	lda $2306
+	sta $46
+	lda $2308
 	sta $2251
 	lda.w #100
 	sta $2253
 	nop
 	xba
-	lda $2308	; YY.XX MHz
-	sta $42		; XX part
 	lda $2306
-	sta $44		; YY part
-
-	bvc +
-	lda #$63
-	sta $42
 	sta $44
-+
+	lda $2308
+	sta $42
+	
+	stz $2250
+	stx $2251
+	ldx $48
+	php
+	stx $2252
+	lda.w #100
+	sta $2253
+	plp
+	bmi +
+	lda #$0000
++	clc
+	adc $2308
+	sta $48
 	
 	sty $80		; data ready.
 	
+	ldx #$f0
 	stx $220b
 	cli
 	pla
@@ -863,6 +1258,187 @@ evil_nmi_sa1_3:
 	
 org $018000
 
+Speed_Test_29: ; bwram + wdma
+	%transfer(sa1_clock_bwram, $7f00)
+	rep #$20
+	lda #$7f00
+	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$7e00 ; bwram address
+	sta $4322
+	lda #$8088 ; write
+	jmp Speed_Test_23_continue
+Speed_Test_28: ; bwram + rdma
+	%transfer(sa1_clock_bwram, $7f00)
+	rep #$20
+	lda #$7f00
+	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$7e00 ; bwram address
+	sta $4322
+	lda #$8088 ; read
+	jmp Speed_Test_23_continue
+Speed_Test_27: ; iram + wdma
+	%transfer(sa1_clock_iram, $3600)
+	rep #$20
+	lda #$3600
+	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$3200 ; iram address
+	sta $4322
+	lda #$8088 ; write
+	jmp Speed_Test_23_continue
+Speed_Test_26: ; iram + rdma
+	%transfer(sa1_clock_iram, $3600)
+	rep #$20
+	lda #$3600
+	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$3200 ; iram address
+	sta $4322
+	lda #$8008 ; read
+	jmp Speed_Test_23_continue
+
+Speed_Test_22:
+	rep #$20
+	lda #sa1_clock_mmio
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	sep #$20
+
+	lda #$01
+	sta $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$81
+	sta $4200
+	
+	lda #$00		; \ Wait for timer over.
+-	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+
+	
+-	lda $3080
+	beq -
+	lda #$01
+	sta $4200
+	stz $0a01
+	rtl
+
+Speed_Test_23:
+	rep #$20
+	lda #sa1_clock_mmio
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$2300
+	sta $4322
+	lda #$8008
+.continue
+	sta $4320
+	ldy #$00
+	sty $4324
+	stz $4325
+	sep #$20
+	
+	lda #$01
+	sta $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$81
+	sta $4200
+	
+	ldy #$04
+	lda #$00		; \ Wait for timer over.
+-	sty $4326
+	sty $2182
+	sty $420b
+	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+	
+-	lda $3080
+	beq -
+	lda #$01
+	sta $4200
+	stz $0a01
+	rtl
+	
+Speed_Test_25:
+	rep #$20
+	lda #sa1_clock_mmio
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$2223 ; a register that nobody cares (super mmc fxb)
+	sta $4322
+	lda #$8088
+	jmp Speed_Test_23_continue
+	
+Speed_Test_24:
+	rep #$20
+	lda #sa1_clock_mmio
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	
+	lda #$2000
+	sta $2181
+	ldy #$00
+	sty $2183
+	lda #$2206 ; a register that nobody cares (sa-1 nmi vector)
+	sta $4322
+	lda #$8088
+	jmp Speed_Test_23_continue
+
 Speed_Test_21:
 	rep #$20
 	ldx #$70
@@ -871,7 +1447,7 @@ Speed_Test_21:
 	lda.w #hdma_tbl|$7f0000
 	sta $4302,x
 	lda.w #hdma_tbl|$7f0000>>8
-	sta $4304,x
+	sta $4303,x
 	sep #$20
 	lda.b #hdma_tbl|$7f0000>>16
 	sta $4307,x
@@ -881,6 +1457,8 @@ Speed_Test_21:
 	tax
 	rep #$20
 	bpl -
+	lda #sa1_clock_finish
+	sta $f0
 	sep #$20
 	lda #$ff
 	sta $420c
@@ -900,7 +1478,7 @@ Speed_Test_20:
 	lda.w #hdma_tbl|$7f0000
 	sta $4302,x
 	lda.w #hdma_tbl|$7f0000>>8
-	sta $4304,x
+	sta $4303,x
 	sep #$20
 	lda.b #hdma_tbl|$7f0000>>16
 	sta $4307,x
@@ -910,6 +1488,8 @@ Speed_Test_20:
 	tax
 	rep #$20
 	bpl -
+	lda #sa1_clock_finish
+	sta $f0
 	sep #$20
 	lda #$ff
 	sta $420c
@@ -937,6 +1517,8 @@ Speed_Test_19:
 	bmi -
 	
 	rep #$21
+	lda #sa1_clock_finish
+	sta $f0
 	lda #$0000
 	ldx #$81
 	stx $4200
@@ -958,6 +1540,8 @@ Speed_Test_18:
 	bmi -
 	
 	rep #$21
+	lda #sa1_clock_finish
+	sta $f0
 	lda #$0000
 	ldx #$81
 	stx $4200
@@ -974,12 +1558,16 @@ Speed_Test_17:
 	rep #$20
 	lda #$3600
 	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
 	jmp Speed_Test_16_continue
 	
 Speed_Test_16:
 	rep #$20
 	lda #sa1_clock
 	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
 .continue
 	
 	lda #$2000
@@ -1039,6 +1627,8 @@ Speed_Test_15:
 	rep #$20
 	lda #sa1_clock
 	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
 	
 	
 	ldx #$70
@@ -1067,6 +1657,8 @@ Speed_Test_14:
 	rep #$20
 	lda #sa1_clock
 	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
 	
 	
 	ldx #$70
@@ -1116,6 +1708,33 @@ Speed_Test_14:
 	stz $0a01
 	rtl
 
+Speed_Test_1:
+	%transfer(sa1_clock_bwram_16o, $7f01)
+	%transfer(snes_test_bwram, $7e00)
+
+	rep #$20
+	lda #$7f01
+	sta $2207
+	jmp Speed_Test_13_continue2
+
+Speed_Test_3:
+	%transfer(sa1_clock_bwram_16, $7f00)
+	%transfer(snes_test_bwram, $7e00)
+
+	rep #$20
+	lda #$7f00
+	sta $2207
+	bra Speed_Test_13_continue2
+	
+Speed_Test_5:
+	%transfer(sa1_clock_bwram_odd, $7f01)
+	%transfer(snes_test_bwram, $7e00)
+
+	rep #$20
+	lda #$7f01
+	sta $2207
+	bra Speed_Test_13_continue
+	
 Speed_Test_13:
 	%transfer(sa1_clock_bwram, $7f00)
 	%transfer(snes_test_bwram, $7e00)
@@ -1123,6 +1742,10 @@ Speed_Test_13:
 	rep #$20
 	lda #$7f00
 	sta $2207
+.continue
+	lda #sa1_clock_finish
+	sta $f0
+.continue2
 	sep #$20
 	
 	lda #$01
@@ -1160,6 +1783,34 @@ base $7e00
 base off
 .end
 
+Speed_Test_0:
+	%transfer(sa1_clock_iram_16o, $3601)
+	%transfer(snes_test_iram, $3500)
+	rep #$20
+	lda #$3601
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	jmp Speed_Test_12_continue2
+
+Speed_Test_2:
+	%transfer(sa1_clock_iram_16, $3600)
+	%transfer(snes_test_iram, $3500)
+	rep #$20
+	lda #$3600
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	bra Speed_Test_12_continue2
+
+Speed_Test_4:
+	%transfer(sa1_clock_iram_odd, $3601)
+	%transfer(snes_test_iram, $3500)
+	rep #$20
+	lda #$3601
+	sta $2207
+	bra Speed_Test_12_continue
+	
 Speed_Test_12:
 	%transfer(sa1_clock_iram, $3600)
 	%transfer(snes_test_iram, $3500)
@@ -1167,6 +1818,10 @@ Speed_Test_12:
 	rep #$20
 	lda #$3600
 	sta $2207
+.continue
+	lda #sa1_clock_finish
+	sta $f0
+.continue2
 	sep #$20
 	
 	lda #$01
@@ -1215,6 +1870,8 @@ Speed_Test_11:
 	rep #$20
 	lda #$3600
 	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
 	sep #$20
 	
 	lda #$01
@@ -1250,6 +1907,8 @@ Speed_Test_10:
 	rep #$20
 	lda #$7f00
 	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
 	sep #$20
 	
 	lda #$01
@@ -1283,7 +1942,10 @@ Speed_Test_9:
 	rep #$20
 	lda #sa1_clock
 	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
 	sep #$20
+.continue
 	
 	lda #$01
 	sta $4200
@@ -1312,35 +1974,32 @@ Speed_Test_9:
 	sta $4200
 	stz $0a01
 	rtl
-
-WriteASCII:
-	php
-	phb
-	phk
-	plb
-	sep #$30
--	bit $4212
-	bpl -
-	ldy #$00
--	lda [$00],y
-	cmp #$ff
-	beq +
-	tax
-	lda.w ASCIITable,x
-	sta $2118
-	stz $2119
-	iny
-	bra -
-+	plb
-	plp
-	rtl
 	
-ASCIITable:
-	db $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0a,$0b,$0c,$0d,$0e,$0f ; 0x
-	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; 1x
-	db $29,$63,$63,$3F,$5F,$37,$3D,$62,$2b,$2c,$3E,$00,$25,$5C,$24,$68 ; 2x
-	db $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$34,$00,$3A,$00,$3B,$00 ; 3x
-	db $00,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E ; 4x
-	db $4F,$64,$51,$52,$53,$54,$55,$56,$65,$66,$67,$39,$00,$38,$3C,$26 ; 5x
-	db $00,$0a,$0b,$0c,$0d,$0e,$0f,$10,$11,$12,$13,$14,$15,$16,$17,$18 ; 6x
-	db $19,$1a,$1b,$1c,$1d,$1e,$1f,$20,$21,$22,$23,$60,$35,$61,$36,$00 ; 7x
+Speed_Test_8:
+	rep #$20
+	lda #sa1_clock_odd
+	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
+	sep #$20
+	jmp Speed_Test_9_continue
+	
+Speed_Test_7:
+	rep #$20
+	lda #sa1_clock_16
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	sep #$20
+	jmp Speed_Test_9_continue
+	
+Speed_Test_6:
+	rep #$20
+	lda #sa1_clock_16_odd
+	sta $2207
+	lda #sa1_clock_finish_16
+	sta $f0
+	sep #$20
+	jmp Speed_Test_9_continue
+
+print "Bank 1: $", pc

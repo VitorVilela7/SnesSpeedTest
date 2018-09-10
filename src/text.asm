@@ -1,5 +1,11 @@
 printendtext:
 	%cursor_pos(22)
+	
+-	bit $4212
+	bmi -
+-	bit $4212
+	bpl -
+	
 	rep #$20
 	lda #.string
 	sta $00
@@ -98,7 +104,7 @@ printendtext:
 	rts
 	
 		;   0123456789abcdef0123456789abcdef
-.string		db "#______________QX__*___________$"
+.string		db "#______________QX____*_________$"
 		db "| 5C77 VER: 0",$ff
 .string2	db                  "h'!5C78 VER:  0",$ff
 .string3	db "h|| 5A22 VER: 0",$ff
@@ -141,14 +147,46 @@ printinittext:
 	rts
 	
 		;   0123456789abcdef0123456789abcdef
-.string		db "<__{SNES-SA1 Speed Test v3.5}__>"
+.string		db "<__{SNES-SA1 Speed Test v4.0}__>"
 		db "|Current Operation    PAGE ",$ff
 .string1	db                             "/2 |",$ff
-.string2	db "#__________&_______&___________$",$ff
-.string3	db "|   SNES   |  SA-1 |   Speed   |",$ff
+.string2	db "#__________&_________&_________$",$ff
+.string3	db "|   SNES   |   SA-1  |Speed@MHz|",$ff
 ;;;;;;;;;;;;;;;;;;;;|DMA BW-RAM|DMA ROM
 ;;;;;;;;;;;;;;;;;;;;|DMA I-RAM|
 ;;;;;;;;;;;;;;;;;;;;|HDMA BWRAM|
 	
 SpeedSymbol:
-	db " MHz |",$ff
+	db "|",$ff
+
+WriteASCII:
+	php
+	phb
+	phk
+	plb
+	sep #$30
+-	bit $4212
+	bpl -
+	ldy #$00
+-	lda [$00],y
+	cmp #$ff
+	beq +
+	tax
+	lda.w ASCIITable,x
+	sta $2118
+	stz $2119
+	iny
+	bra -
++	plb
+	plp
+	rtl
+	
+ASCIITable:
+	db $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0a,$0b,$0c,$0d,$0e,$0f ; 0x
+	db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 ; 1x
+	db $29,$63,$63,$3F,$5F,$37,$3D,$62,$2b,$2c,$3E,$00,$25,$5C,$24,$68 ; 2x
+	db $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$34,$00,$3A,$00,$3B,$00 ; 3x
+	db $2D,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E ; 4x
+	db $4F,$64,$51,$52,$53,$54,$55,$56,$65,$66,$67,$39,$00,$38,$3C,$26 ; 5x
+	db $00,$0a,$0b,$0c,$0d,$0e,$0f,$10,$11,$12,$13,$14,$15,$16,$17,$18 ; 6x
+	db $19,$1a,$1b,$1c,$1d,$1e,$1f,$20,$21,$22,$23,$60,$35,$61,$36,$00 ; 7x

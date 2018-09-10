@@ -72,7 +72,7 @@ NMI:
 -	lda $3081
 	beq -
 	rep #$20
-	lda #sa1_clock_finish
+	lda $f0
 	sta $2207
 	sep #$20
 	lda #$ff
@@ -85,7 +85,7 @@ NMI:
 	lda.b #.code0-.code0
 	sta $0a01
 	rep #$20
-	lda #sa1_clock_finish
+	lda $f0
 	sta $2207
 	sep #$20
 	lda #$00
@@ -136,5 +136,5 @@ NMI:
 	sta $3081
 	cli
 	rtl
-
+	
 .end
