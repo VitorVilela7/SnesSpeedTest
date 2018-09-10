@@ -125,6 +125,20 @@ Reset:
 	lda #$39
 	sta $2122
 	
+	stz $2122
+	stz $2122
+	lda #$18
+	sta $2122
+	lda #$63
+	sta $2122
+	stz $2122
+	stz $2122
+	lda #$ce
+	sta $2122
+	lda #$39
+	sta $2122
+	
+	
 	cpy #$00
 	beq +
 	ldy #$00
@@ -242,23 +256,23 @@ endmacro
 	sta $2116
 	sep #$30
 	%cursor_pos(1) : jsr test_rom
-	%cursor_pos(2) : jsr test_rom_parallel
-	%cursor_pos(3) : jsr test_iram
-	%cursor_pos(4) : jsr test_iram_rom
-	%cursor_pos(5) : jsr test_bwram
-	%cursor_pos(6) : jsr test_bwram_rom
-	%cursor_pos(7) : jsr test_iram_iram
-	%cursor_pos(8) : jsr test_bwram_bwram
-	%cursor_pos(9) : jsr test_hdma_rom
-	%cursor_pos(10) : jsr test_hdma_wram
-	%cursor_pos(11) : jsr test_dma_rom
-	%cursor_pos(12) : jsr test_dma_iram
-	%cursor_pos(14) : jsr test_scpu_rom
-	%cursor_pos(15) : jsr test_scpu_wram
-	%cursor_pos(16) : jsr test_scpu_iram
-	%cursor_pos(18) : jsr test_scpu_hdma_rom
-	%cursor_pos(19) : jsr test_scpu_hdma_wram
-	%cursor_pos(20) : jsr test_scpu_hdma_iram
+	;%cursor_pos(2) : jsr test_rom_parallel
+	;%cursor_pos(3) : jsr test_iram
+	;%cursor_pos(4) : jsr test_iram_rom
+	;%cursor_pos(5) : jsr test_bwram
+	;%cursor_pos(6) : jsr test_bwram_rom
+	;%cursor_pos(7) : jsr test_iram_iram
+	;%cursor_pos(8) : jsr test_bwram_bwram
+	;%cursor_pos(9) : jsr test_hdma_rom
+	;%cursor_pos(10) : jsr test_hdma_wram
+	;%cursor_pos(11) : jsr test_dma_rom
+	;%cursor_pos(12) : jsr test_dma_iram
+	;%cursor_pos(14) : jsr test_scpu_rom
+	;%cursor_pos(15) : jsr test_scpu_wram
+	;%cursor_pos(16) : jsr test_scpu_iram
+	;%cursor_pos(18) : jsr test_scpu_hdma_rom
+	;%cursor_pos(19) : jsr test_scpu_hdma_wram
+	;%cursor_pos(20) : jsr test_scpu_hdma_iram
 	
 	jsr printendtext
 	
@@ -633,8 +647,12 @@ SA1Reset:
 
 	cli
 	
-	lda $9f230e
-	sta $300f
+	ldx #$00
+-	lda $2300,x
+	sta $3700,x
+	inx
+	cpx #$10
+	bne -
 	
 	; stay 16-bit A
 	lda #$0000
@@ -655,11 +673,13 @@ HexDec:
 	BRA -
 +	RTS
 
+nop
 sa1_clock:
 	stx $81		; \ "small insignificant noise"
 	stx $220b	;  |
 	cli		; /
 	
+print pc
 -	adc #$0000	; 3 mem cycles \ 15 cycles
 	adc #$0000	; 3 mem cycles  |
 	adc #$0000	; 3 mem cycles  |
@@ -669,6 +689,7 @@ sa1_clock:
 
 sa1_clock_bwram:
 base $7f00
+nop
 	stx $81		; \ "small insignificant noise"
 	stx $220b	;  |
 	cli		; /
@@ -683,6 +704,7 @@ base off
 
 sa1_clock_iram:
 base $3600
+nop
 	stx $81		; \ "small insignificant noise"
 	stx $220b	;  |
 	cli		; /
@@ -730,6 +752,14 @@ sa1_clock_finish:
 +
 	
 	sty $80		; data ready.
+	
+	ldy #$00
+-	lda $2300,y
+	sta $3700,y
+	iny
+	iny
+	cpy #$10
+	bne -
 	
 	stx $220b
 	cli
@@ -1164,6 +1194,7 @@ Speed_Test_9:
 	lda #$80
 	sta $4200
 	
+print pc
 	lda #$00		; \ Wait for timer over.
 -	cmp #$00		;  |
 	bmi +			;  |
