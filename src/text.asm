@@ -43,14 +43,16 @@ printendtext:
 	jsl WriteASCII
 	
 	sep #$20
-	lda $bf230e
-	lsr #4
+	
+	lda $300e
+	bpl .ok0
+	lda #$5c
 	sta $2118
 	stz $2119
-	lda $bf230e
-	and #$0f
 	sta $2118
 	stz $2119
+	bra .skip0
+.ok0
 	lda $300f
 	lsr #4
 	sta $2118
@@ -59,8 +61,31 @@ printendtext:
 	and #$0f
 	sta $2118
 	stz $2119
+.skip0
 	
-	
+	lda $bf230e
+	cmp #$bf
+	bne .ok1
+	lda $be230e
+	cmp #$be
+	bne .ok1
+	lda #$5c
+	sta $2118
+	stz $2119
+	sta $2118
+	stz $2119
+	bra .skip1
+.ok1
+	lda $230e
+	lsr #4
+	sta $2118
+	stz $2119
+	lda $230e
+	and #$0f
+	sta $2118
+	stz $2119
+.skip1
+
 	rep #$20
 	
 	lda #.string5
@@ -75,9 +100,9 @@ printendtext:
 		;   0123456789abcdef0123456789abcdef
 .string		db "#______________QX__*___________$"
 		db "| 5C77 VER: 0",$ff
-.string2	db                  "h'! 5C78 VER: 0",$ff
+.string2	db                  "h'!5C78 VER:  0",$ff
 .string3	db "h|| 5A22 VER: 0",$ff
-.string4	db                 "h'! SA1 VER:",$ff
+.string4	db                 "h'!SA-1 VER:",$ff
 .string5	db                             "h|"
 		db "[______________YZ______________]"
 

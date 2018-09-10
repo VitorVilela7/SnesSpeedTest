@@ -629,14 +629,20 @@ SA1Reset:
 	bpl -
 	lda #$aabb
 	sta $00
-	sep #$10
+	sep #$30
 
 	cli
 	
-	lda $9f230e
+	lda $230e
 	sta $300f
+	stz $300e
+	cmp $230f
+	bne .not_open_bus
+	dec $300e
+.not_open_bus	
 	
 	; stay 16-bit A
+	rep #$20
 	lda #$0000
 	ldx #$f0 ; clear irq
 	clc
