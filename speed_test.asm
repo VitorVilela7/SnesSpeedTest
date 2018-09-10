@@ -199,7 +199,7 @@ Reset:
 	lda #$02
 	sta $2130
 	
-	lda #$fc
+	lda #$fd
 	sta $210e
 	stz $210e
 	stz $210d
@@ -208,7 +208,7 @@ Reset:
 	lda #$0f
 	sta $2100
 	
-	lda #$fb
+	lda #$fc
 	sta $210f
 	lda #$ff
 	sta $210f
