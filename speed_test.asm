@@ -214,7 +214,8 @@ Reset:
 	sta $210f
 	
 	sei
-	stz $4200
+	lda #$01
+	sta $4200
 	
 macro cursor_pos(y)
 	lda.b #-<y><<3-$001C
@@ -343,7 +344,7 @@ break:
 	tcs
 	sep #$20
 	
-	lda #$00
+	lda #$01
 	sta $004200
 	sei
 	
@@ -359,7 +360,7 @@ break:
 	sta $00220b
 	lda.b #NMI_code3-NMI_code0
 	sta $000a01
-	lda #$80
+	lda #$81
 	sta $004200
 	cli
 	rep #$20
@@ -803,7 +804,8 @@ Speed_Test_21:
 	phk
 	jsr Speed_Test_19
 	stz $420c
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 
@@ -831,13 +833,15 @@ Speed_Test_20:
 	phk
 	jsr Speed_Test_18
 	stz $420c
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 
 ; S-CPU test.
 Speed_Test_19:
-	stz $4200
+	lda #$01
+	sta $4200
 	
 	lda.b #NMI_code1-NMI_code0
 	sta $0a01
@@ -851,13 +855,14 @@ Speed_Test_19:
 	
 	rep #$21
 	lda #$0000
-	ldx #$80
+	ldx #$81
 	stx $4200
 	jmp.w snes_clock_iram
 	
 ; S-CPU test.
 Speed_Test_18:
-	stz $4200
+	lda #$01
+	sta $4200
 	
 	lda.b #NMI_code1-NMI_code0
 	sta $0a01
@@ -871,7 +876,7 @@ Speed_Test_18:
 	
 	rep #$21
 	lda #$0000
-	ldx #$80
+	ldx #$81
 	stx $4200
 	
 -	adc #$0000	; 3 mem cycles \ 15 cycles
@@ -906,7 +911,8 @@ Speed_Test_16:
 	stz $4325
 	sep #$20
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	
 -	bit $4212
 	bpl -
@@ -917,7 +923,7 @@ Speed_Test_16:
 	stz $3081
 
 	ldy #$04
-	lda #$80
+	lda #$81
 	sta $4200
 	lda #$00		; \ Wait for timer over.
 	
@@ -932,7 +938,8 @@ Speed_Test_16:
 -	lda $3080
 	beq -
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 
@@ -943,7 +950,8 @@ hdma_data_ptr:
 	dw $0000, $0000
 
 Speed_Test_15:
-	stz $4200
+	lda #$01
+	sta $4200
 	
 	rep #$20
 	lda #sa1_clock
@@ -970,7 +978,8 @@ Speed_Test_15:
 	bra Speed_Test_14_continue
 	
 Speed_Test_14:
-	stz $4200
+	lda #$01
+	sta $4200
 	
 	rep #$20
 	lda #sa1_clock
@@ -1006,7 +1015,7 @@ Speed_Test_14:
 	stz $3080
 	stz $3081
 	
-	lda #$80
+	lda #$81
 	sta $4200
 	
 	lda #$00		; \ Wait for timer over.
@@ -1018,7 +1027,8 @@ Speed_Test_14:
 -	lda $3080
 	beq -
 
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $420c
 	stz $0a01
 	rtl
@@ -1032,7 +1042,8 @@ Speed_Test_13:
 	sta $2207
 	sep #$20
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	
 -	bit $4212
 	bpl -
@@ -1042,12 +1053,13 @@ Speed_Test_13:
 	stz $3080
 	stz $3081
 	
-	lda #$80
+	lda #$81
 	sta $4200
 	
 	jsr $7e00
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 	
@@ -1074,7 +1086,8 @@ Speed_Test_12:
 	sta $2207
 	sep #$20
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	
 -	bit $4212
 	bpl -
@@ -1089,12 +1102,13 @@ Speed_Test_12:
 	sta $402000
 	sep #$20
 	
-	lda #$80
+	lda #$81
 	sta $4200
 	
 	jsr $3500
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 	
@@ -1120,7 +1134,8 @@ Speed_Test_11:
 	sta $2207
 	sep #$20
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	
 -	bit $4212
 	bpl -
@@ -1130,7 +1145,7 @@ Speed_Test_11:
 	stz $3080
 	stz $3081
 	
-	lda #$80
+	lda #$81
 	sta $4200
 	
 	lda #$00		; \ Wait for timer over.
@@ -1141,7 +1156,8 @@ Speed_Test_11:
 	
 -	lda $3080
 	beq -
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 	
@@ -1153,7 +1169,8 @@ Speed_Test_10:
 	sta $2207
 	sep #$20
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	
 -	bit $4212
 	bpl -
@@ -1163,7 +1180,7 @@ Speed_Test_10:
 	stz $3080
 	stz $3081
 	
-	lda #$80
+	lda #$81
 	sta $4200
 	
 	lda #$00		; \ Wait for timer over.
@@ -1174,7 +1191,8 @@ Speed_Test_10:
 
 -	lda $3080
 	beq -
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 
@@ -1184,7 +1202,8 @@ Speed_Test_9:
 	sta $2207
 	sep #$20
 	
-	stz $4200
+	lda #$01
+	sta $4200
 	
 -	bit $4212
 	bpl -
@@ -1194,7 +1213,7 @@ Speed_Test_9:
 	stz $3080
 	stz $3081
 	
-	lda #$80
+	lda #$81
 	sta $4200
 	
 	lda #$00		; \ Wait for timer over.
@@ -1206,7 +1225,8 @@ Speed_Test_9:
 	
 -	lda $3080
 	beq -
-	stz $4200
+	lda #$01
+	sta $4200
 	stz $0a01
 	rtl
 
