@@ -432,13 +432,13 @@ test_table_page3:
 test_table_page4:
 	db 1 : dw test_iram_rti			; WRAM I-RAM (RTI)
 	db 4 : dw test_sa1_dma_rom_iram_pri	; WRAM SA-1 DMA ROM->I-RAM PRI
-	db 5 : dw test_sa1_dma_rom_iram_low	; WRAM SA-1 DMA ROM->I-RAM LOW
-	db 6 : dw test_sa1_dma_rom_bwram_pri	; WRAM SA-1 DMA ROM->BW-RAM PRI
-	db 7 : dw test_sa1_dma_rom_bwram_low	; WRAM SA-1 DMA ROM->BW-RAM LOW
-	db 8 : dw test_sa1_dma_rom_iram_bwram_pri; WRAM SA-1 DMA I-RAM->BW-RAM PRI
-	db 9 : dw test_sa1_dma_rom_iram_bwram_low; WRAM SA-1 DMA I-RAM->BW-RAM LOW
-	db 10 : dw test_sa1_dma_rom_bwram_iram_pri; WRAM SA-1 DMA BW-RAM->I-RAM PRI
-	db 11 : dw test_sa1_dma_rom_bwram_iram_low; WRAM SA-1 DMA BW-RAM->I-RAM LOW
+	db 6 : dw test_sa1_dma_rom_iram_low	; WRAM SA-1 DMA ROM->I-RAM LOW
+	db 8 : dw test_sa1_dma_rom_bwram_pri	; WRAM SA-1 DMA ROM->BW-RAM PRI
+	db 10 : dw test_sa1_dma_rom_bwram_low	; WRAM SA-1 DMA ROM->BW-RAM LOW
+	db 12 : dw test_sa1_dma_rom_iram_bwram_pri; WRAM SA-1 DMA I-RAM->BW-RAM PRI
+	db 14 : dw test_sa1_dma_rom_iram_bwram_low; WRAM SA-1 DMA I-RAM->BW-RAM LOW
+	db 16 : dw test_sa1_dma_rom_bwram_iram_pri; WRAM SA-1 DMA BW-RAM->I-RAM PRI
+	db 18 : dw test_sa1_dma_rom_bwram_iram_low; WRAM SA-1 DMA BW-RAM->I-RAM LOW
 	
 	db $FF ; end.
 
@@ -598,6 +598,25 @@ write_text:
 .error_text
 	db " FAILED |",$ff
 	
+par:	db "|       | Core Speed |~",$ff
+	
+macro sa1_dma_par_res()
+	jsr write_text
+	rep #$20
+	stz $3080
+	lda #sa1_clock_dma_finish_parallel
+	sta $2207
+	sep #$20
+	lda #$80
+	sta $2200
+-	lda $3080
+	beq -
+	stz $2200
+	rep #$20
+	lda #par
+	jmp write_text
+endmacro
+	
 test_sa1_dma_rom_iram_pri:	; WRAM SA-1 DMA ROM->I-RAM PRI
 	rep #$20
 	lda #sa1_clock_dma
@@ -612,7 +631,7 @@ test_sa1_dma_rom_iram_pri:	; WRAM SA-1 DMA ROM->I-RAM PRI
 	stz $02
 	jsl WriteASCII
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  | ROM\I-RAM P|~",$ff
 
 	;   0123456789abcdef0123456789abcdef
@@ -629,7 +648,7 @@ test_sa1_dma_rom_iram_low:	; WRAM SA-1 DMA ROM->I-RAM LOW
 	jsl Speed_Test_9_continue|$7f0000
 	rep #$20
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  | ROM\I-RAM L|~",$ff
 
 test_sa1_dma_rom_bwram_pri:	; WRAM SA-1 DMA ROM->BW-RAM PRI
@@ -642,7 +661,7 @@ test_sa1_dma_rom_bwram_pri:	; WRAM SA-1 DMA ROM->BW-RAM PRI
 	jsl Speed_Test_9_continue|$7f0000
 	rep #$20
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  |ROM\BW-RAM P|~",$ff
 
 test_sa1_dma_rom_bwram_low:	; WRAM SA-1 DMA ROM->BW-RAM LOW
@@ -655,7 +674,7 @@ test_sa1_dma_rom_bwram_low:	; WRAM SA-1 DMA ROM->BW-RAM LOW
 	jsl Speed_Test_9_continue|$7f0000
 	rep #$20
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  |ROM\BW-RAM L|~",$ff
 
 test_sa1_dma_rom_iram_bwram_pri:	; WRAM SA-1 DMA I-RAM->BW-RAM PRI
@@ -668,7 +687,7 @@ test_sa1_dma_rom_iram_bwram_pri:	; WRAM SA-1 DMA I-RAM->BW-RAM PRI
 	jsl Speed_Test_9_continue|$7f0000
 	rep #$20
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  | I-\BW-RAM P|~",$ff
 
 test_sa1_dma_rom_iram_bwram_low:	; WRAM SA-1 DMA I-RAM->BW-RAM LOW
@@ -681,7 +700,7 @@ test_sa1_dma_rom_iram_bwram_low:	; WRAM SA-1 DMA I-RAM->BW-RAM LOW
 	jsl Speed_Test_9_continue|$7f0000
 	rep #$20
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  | I-\BW-RAM L|~",$ff
 
 test_sa1_dma_rom_bwram_iram_pri:	; WRAM SA-1 DMA BW-RAM->I-RAM PRI
@@ -694,7 +713,7 @@ test_sa1_dma_rom_bwram_iram_pri:	; WRAM SA-1 DMA BW-RAM->I-RAM PRI
 	jsl Speed_Test_9_continue|$7f0000
 	rep #$20
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  | BW-\I-RAM P|~",$ff
 
 test_sa1_dma_rom_bwram_iram_low:	; WRAM SA-1 DMA BW-RAM->I-RAM LOW
@@ -707,7 +726,7 @@ test_sa1_dma_rom_bwram_iram_low:	; WRAM SA-1 DMA BW-RAM->I-RAM LOW
 	jsl Speed_Test_9_continue|$7f0000
 	rep #$20
 	lda #.str
-	jmp write_text	
+	%sa1_dma_par_res()
 .str	db "|  ROM  | BW-\I-RAM L|~",$ff
 	
 test_rom_rti:			; WRAM ROM (RTI)
@@ -1897,6 +1916,11 @@ evil_nmi_sa1_3:
 	pha
 	jmp sa1_clock_finish
 	
+sa1_clock_dma_finish_parallel:
+	rep #$20
+	lda $300a
+	jmp sa1_clock_finish
+	
 ; 1 DMA = 512 + 5 + 2 + 4 + 3 + 5 + 5 + 3 + 2 + 4 + 3 + 4 + 3 + 4 + 2 + 3 + 4 + 3 + 3 + 7 + 5 + 7 + 8 = 601 cycles.
 ; 601 : 1
 ; 300 : 2
@@ -1922,6 +1946,7 @@ sa1_clock_dma_low_pri_bwram_iram2:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 	jmp sa1_clock_dma_bwram_iram2_continue
 	
 sa1_clock_dma_bwram_iram2:
@@ -1943,6 +1968,7 @@ sa1_clock_dma_bwram_iram2:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 
 .continue
 	ldy $04
@@ -1955,11 +1981,18 @@ sa1_clock_dma_bwram_iram2:
 	sta $2238	; /
 	sta $2235	; I-RAM dest...
 	
--	ldy $02		; \ wait for DMA.
+	lda $0a
+	clc
+	
+-	adc #$0000	; \
+	adc #$0001	;  |
+	cpy #$ff	;  |
+	ldy $02		;  | wait for DMA.
 	beq -		;  |
 	stz $02		; /
-	jmp .continue
+	sta $0a
 
+	jmp .continue
 
 sa1_clock_dma_low_pri_bwram_iram:
 	pha
@@ -1980,6 +2013,7 @@ sa1_clock_dma_low_pri_bwram_iram:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 	jmp sa1_clock_dma_bwram_iram_continue
 	
 sa1_clock_dma_bwram_iram:
@@ -2001,6 +2035,7 @@ sa1_clock_dma_bwram_iram:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 	
 .continue
 	ldy $04
@@ -2015,19 +2050,27 @@ sa1_clock_dma_bwram_iram:
 	ldy #$40
 	sty $2237
 	
--	ldy $02		; \ wait for DMA.
+	lda $0a
+	clc
+	
+-	adc #$0000	; \
+	adc #$0001	;  |
+	cpy #$ff	;  |
+	ldy $02		;  | wait for DMA.
 	beq -		;  |
 	stz $02		; /
-	jmp .continue
+	sta $0a
 
+	jmp .continue
 	
 sa1_clock_dma_low_pri:
 	pha
 	sep #$20
 	lda $2301
 	bit #$20
-	bne sa1_clock_dma_finish_dma_end
-	rep #$20
+	beq +
+	jmp sa1_clock_dma_finish_dma_end
++	rep #$20
 	pla
 
 	stx $81		; \ "small insignificant noise"
@@ -2039,6 +2082,7 @@ sa1_clock_dma_low_pri:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 	jmp sa1_clock_dma_continue
 	
 sa1_clock_dma:
@@ -2059,6 +2103,7 @@ sa1_clock_dma:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 
 .continue
 	ldy $04
@@ -2071,9 +2116,16 @@ sa1_clock_dma:
 	sta $2238	; /
 	sta $2235	; I-RAM dest...
 	
--	ldy $02		; \ wait for DMA.
+	lda $0a
+	clc
+	
+-	adc #$0000	; \
+	adc #$0001	;  |
+	cpy #$ff	;  |
+	ldy $02		;  | wait for DMA.
 	beq -		;  |
 	stz $02		; /
+	sta $0a
 	jmp .continue
 
 sa1_clock_dma_finish:
@@ -2119,6 +2171,7 @@ sa1_clock_dma_bwram:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 
 .continue
 	ldy $04
@@ -2133,9 +2186,16 @@ sa1_clock_dma_bwram:
 	ldy #$40
 	sty $2237
 	
--	ldy $02		; \ wait for DMA.
+	lda $0a
+	clc
+	
+-	adc #$0000	; \
+	adc #$0001	;  |
+	cpy #$ff	;  |
+	ldy $02		;  | wait for DMA.
 	beq -		;  |
 	stz $02		; /
+	sta $0a
 	jmp .continue
 	
 sa1_clock_dma_low_pri_bwram:
@@ -2156,6 +2216,7 @@ sa1_clock_dma_low_pri_bwram:
 	sty $04
 	stz $00		; dma count.
 	stz $02		; dma flag.
+	stz $0a		; wait count.
 	jmp sa1_clock_dma_bwram_continue
 	
 	
