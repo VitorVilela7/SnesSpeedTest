@@ -82,12 +82,13 @@ NMI:
 	sta $2200
 -	lda $3081
 	beq -
-	lda.b #.code0-.code0
-	sta $0a01
+	stz $2200
 	rep #$20
 	lda $f0
 	sta $2207
 	sep #$20
+	lda.b #.code0-.code0
+	sta $0a01
 	lda #$00
 	rti
 	
@@ -134,6 +135,8 @@ NMI:
 	lda #$69
 	sta $3080
 	sta $3081
+	lda #$48
+	sta $2132
 	cli
 	rtl
 	

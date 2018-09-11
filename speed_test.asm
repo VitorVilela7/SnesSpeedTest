@@ -431,7 +431,15 @@ test_table_page3:
 	
 test_table_page4:
 	db 1 : dw test_iram_rti			; WRAM I-RAM (RTI)
-
+	db 4 : dw test_sa1_dma_rom_iram_pri	; WRAM SA-1 DMA ROM->I-RAM PRI
+	db 5 : dw test_sa1_dma_rom_iram_low	; WRAM SA-1 DMA ROM->I-RAM LOW
+	db 6 : dw test_sa1_dma_rom_bwram_pri	; WRAM SA-1 DMA ROM->BW-RAM PRI
+	db 7 : dw test_sa1_dma_rom_bwram_low	; WRAM SA-1 DMA ROM->BW-RAM LOW
+	db 8 : dw test_sa1_dma_rom_iram_bwram_pri; WRAM SA-1 DMA I-RAM->BW-RAM PRI
+	db 9 : dw test_sa1_dma_rom_iram_bwram_low; WRAM SA-1 DMA I-RAM->BW-RAM LOW
+	db 10 : dw test_sa1_dma_rom_bwram_iram_pri; WRAM SA-1 DMA BW-RAM->I-RAM PRI
+	db 11 : dw test_sa1_dma_rom_bwram_iram_low; WRAM SA-1 DMA BW-RAM->I-RAM LOW
+	
 	db $FF ; end.
 
 ; attempts to recover after a crash.
@@ -589,6 +597,118 @@ write_text:
 	
 .error_text
 	db " FAILED |",$ff
+	
+test_sa1_dma_rom_iram_pri:	; WRAM SA-1 DMA ROM->I-RAM PRI
+	rep #$20
+	lda #sa1_clock_dma
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str2
+	sta $00
+	stz $02
+	jsl WriteASCII
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  | ROM\I-RAM P|~",$ff
+
+	;   0123456789abcdef0123456789abcdef
+.str2	db "#_______&__*_________%_________$"
+	db "| C-CPU |  SA-1 DMA  |DMASp@MHz|",$ff
+
+test_sa1_dma_rom_iram_low:	; WRAM SA-1 DMA ROM->I-RAM LOW
+	rep #$20
+	lda #sa1_clock_dma_low_pri
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  | ROM\I-RAM L|~",$ff
+
+test_sa1_dma_rom_bwram_pri:	; WRAM SA-1 DMA ROM->BW-RAM PRI
+	rep #$20
+	lda #sa1_clock_dma_bwram
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  |ROM\BW-RAM P|~",$ff
+
+test_sa1_dma_rom_bwram_low:	; WRAM SA-1 DMA ROM->BW-RAM LOW
+	rep #$20
+	lda #sa1_clock_dma_low_pri_bwram
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  |ROM\BW-RAM L|~",$ff
+
+test_sa1_dma_rom_iram_bwram_pri:	; WRAM SA-1 DMA I-RAM->BW-RAM PRI
+	rep #$20
+	lda #sa1_clock_dma_bwram_iram
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  | I-\BW-RAM P|~",$ff
+
+test_sa1_dma_rom_iram_bwram_low:	; WRAM SA-1 DMA I-RAM->BW-RAM LOW
+	rep #$20
+	lda #sa1_clock_dma_low_pri_bwram_iram
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  | I-\BW-RAM L|~",$ff
+
+test_sa1_dma_rom_bwram_iram_pri:	; WRAM SA-1 DMA BW-RAM->I-RAM PRI
+	rep #$20
+	lda #sa1_clock_dma_bwram_iram2
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  | BW-\I-RAM P|~",$ff
+
+test_sa1_dma_rom_bwram_iram_low:	; WRAM SA-1 DMA BW-RAM->I-RAM LOW
+	rep #$20
+	lda #sa1_clock_dma_low_pri_bwram_iram2
+	sta $2207
+	lda #sa1_clock_dma_finish
+	sta $f0
+	sep #$20
+	jsl Speed_Test_9_continue|$7f0000
+	rep #$20
+	lda #.str
+	jmp write_text	
+.str	db "|  ROM  | BW-\I-RAM L|~",$ff
 	
 test_rom_rti:			; WRAM ROM (RTI)
 	rep #$20
@@ -1307,6 +1427,8 @@ HexDec:
 	INX
 	BRA -
 +	RTS
+	
+;nop
 
 sa1_clock_rts:
 	stx $81		; \ "small insignificant noise"
@@ -1321,11 +1443,14 @@ print "ROM test position (should be even): $", pc
 	rts		; 6 /
 .end
 
+nop
+
 sa1_clock_rtl:
 	stx $81		; \ "small insignificant noise"
 	stx $220b	;  |
 	cli		; /
-	
+		
+
 print "ROM test position (should be even): $", pc
 
 .me
@@ -1364,6 +1489,8 @@ print "ROM test position (should be even): $", pc
 +	adc #$0001	; 3 mem cycles  |
 	jml -		; 4 mem cycles /
 .end
+	
+nop
 
 sa1_clock_bra:
 	stx $81		; \ "small insignificant noise"
@@ -1377,7 +1504,9 @@ print "ROM test position (should be even): $", pc
 +	bra +		; 3
 +	adc #$0001	; 3
 	bra -		; 3
-	
+		
+nop
+
 sa1_clock_brl:
 	stx $81		; \ "small insignificant noise"
 	stx $220b	;  |
@@ -1402,6 +1531,8 @@ print "ROM test position (should be even): $", pc
 +	jmp +		; 3
 +	adc #$0001	; 3
 	jmp -		; 3
+	
+nop
 
 sa1_clock_mmio:
 	stx $81		; \ "small insignificant noise"
@@ -1765,6 +1896,270 @@ evil_nmi_sa1_3:
 	pha
 	pha
 	jmp sa1_clock_finish
+	
+; 1 DMA = 512 + 5 + 2 + 4 + 3 + 5 + 5 + 3 + 2 + 4 + 3 + 4 + 3 + 4 + 2 + 3 + 4 + 3 + 3 + 7 + 5 + 7 + 8 = 601 cycles.
+; 601 : 1
+; 300 : 2
+; 30 : 20
+; 15 : 40
+
+sa1_clock_dma_low_pri_bwram_iram2:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	beq +
+	jmp sa1_clock_dma_finish_dma_end
++	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%10000001
+	sty $2230
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+	jmp sa1_clock_dma_bwram_iram2_continue
+	
+sa1_clock_dma_bwram_iram2:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	beq +
+	jmp sa1_clock_dma_finish_dma_end
++	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%11000001
+	sty $2230
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+
+.continue
+	ldy $04
+	sty $2230
+	stz $2232	; source bw-ram
+	ldy #$40	;
+	sty $2234	;
+	
+	lda #$0200	; \ 512 bytes...
+	sta $2238	; /
+	sta $2235	; I-RAM dest...
+	
+-	ldy $02		; \ wait for DMA.
+	beq -		;  |
+	stz $02		; /
+	jmp .continue
+
+
+sa1_clock_dma_low_pri_bwram_iram:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	beq +
+	jmp sa1_clock_dma_finish_dma_end
++	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%10000110
+	sty $2230
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+	jmp sa1_clock_dma_bwram_iram_continue
+	
+sa1_clock_dma_bwram_iram:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	beq +
+	jmp sa1_clock_dma_finish_dma_end
++	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%11000110
+	sty $2230
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+	
+.continue
+	ldy $04
+	sty $2230
+	stz $2232	; source i-ram
+	ldy #$00	;
+	sty $2234	;
+	
+	lda #$0200	; \ 512 bytes...
+	sta $2238	; /
+	sta $2235	; BW-RAM dest...
+	ldy #$40
+	sty $2237
+	
+-	ldy $02		; \ wait for DMA.
+	beq -		;  |
+	stz $02		; /
+	jmp .continue
+
+	
+sa1_clock_dma_low_pri:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	bne sa1_clock_dma_finish_dma_end
+	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%10000000
+	sty $2230
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+	jmp sa1_clock_dma_continue
+	
+sa1_clock_dma:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	bne sa1_clock_dma_finish_dma_end
+	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%11000000
+	sty $2230
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+
+.continue
+	ldy $04
+	sty $2230
+	stz $2232	; source rom
+	ldy #$c0	;
+	sty $2234	;
+	
+	lda #$0200	; \ 512 bytes...
+	sta $2238	; /
+	sta $2235	; I-RAM dest...
+	
+-	ldy $02		; \ wait for DMA.
+	beq -		;  |
+	stz $02		; /
+	jmp .continue
+
+sa1_clock_dma_finish:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	bne .dma_end
+	
+	stz $2230	; END.
+	
+	rep #$20
+	pla
+	lda $00
+	asl #2
+	adc $00
+	asl #3
+	jmp sa1_clock_finish
+	
+.dma_end
+	lda #$20
+	sta $220b
+	sta $02		; set dma flag.
+	rep #$20
+	inc $00		; increase dma count
+	pla
+	rti
+	
+sa1_clock_dma_bwram:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	bne sa1_clock_dma_finish_dma_end
+	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%11000100
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+
+.continue
+	ldy $04
+	sty $2230
+	stz $2232	; source rom
+	ldy #$c0	;
+	sty $2234	;
+	
+	lda #$0200	; \ 512 bytes...
+	sta $2238	; /
+	sta $2235	; BW-RAM dest...
+	ldy #$40
+	sty $2237
+	
+-	ldy $02		; \ wait for DMA.
+	beq -		;  |
+	stz $02		; /
+	jmp .continue
+	
+sa1_clock_dma_low_pri_bwram:
+	pha
+	sep #$20
+	lda $2301
+	bit #$20
+	bne sa1_clock_dma_finish_dma_end
+	rep #$20
+	pla
+
+	stx $81		; \ "small insignificant noise"
+	stx $220b	;  |
+	cli		; /
+	
+	ldy.b #%10000100
+	sty $2230
+	sty $04
+	stz $00		; dma count.
+	stz $02		; dma flag.
+	jmp sa1_clock_dma_bwram_continue
+	
+	
+print "Bank 0: $", pc
 	
 org $018000
 
