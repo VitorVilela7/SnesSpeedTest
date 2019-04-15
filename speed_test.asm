@@ -60,7 +60,7 @@ Reset:
 	plb						;| program bank = 00
 	sep #$30				;/
 	
-	lda #$00				;\ fastrom off
+	lda #$01				;\ fastrom *on*
 	sta $420d				;/
 	
 	ldx #$00
@@ -297,6 +297,9 @@ endmacro
 	bmi -
 -	bit $4212
 	bpl -
+	lda #$01				;\ fastrom *on*
+	sta $420d				;/
+	
 	
 	rep #$20
 	lda #$4000
@@ -363,7 +366,7 @@ test_table_page1:
 	db 5 : dw test_bwram			; WRAM BWRAM
 	db 6 : dw test_bwram_rom		; ROM BWRAM
 	db 7 : dw test_iram_iram		; IRAM IRAM
-	db 8 : dw test_bwram_bwram		; BWRAM BWRAM
+	db 8 : dw test_rom_parallel2		; BWRAM BWRAM
 	db 9 : dw test_hdma_rom			; HDMA-ROM ROM
 	db 10 : dw test_hdma_wram		; HDMA-WRAM ROM
 	db 11 : dw test_dma_rom			; DMA-ROM ROM
@@ -829,7 +832,7 @@ test_rom_parallel_rtl:		; ROM ROM (RTL)
 	lda #sa1_clock_finish_16
 	sta $f0
 	sep #$20
-	jsl Speed_Test_9_continue
+	jsl Speed_Test_9_continue|$800000
 	rep #$20
 	lda #.str
 	jmp write_text	
@@ -869,7 +872,7 @@ test_rom_parallel_bra:		; ROM ROM (BRA)
 	lda #sa1_clock_finish
 	sta $f0
 	sep #$20
-	jsl Speed_Test_9_continue
+	jsl Speed_Test_9_continue|$800000
 	rep #$20
 	lda #.str
 	jmp write_text	
@@ -909,7 +912,7 @@ test_rom_parallel_brl:		; ROM ROM (BRL)
 	lda #sa1_clock_finish
 	sta $f0
 	sep #$20
-	jsl Speed_Test_9_continue
+	jsl Speed_Test_9_continue|$800000
 	rep #$20
 	lda #.str
 	jmp write_text	
@@ -950,7 +953,7 @@ test_rom_parallel_jmp:		; ROM ROM (JMP)
 	lda #sa1_clock_finish
 	sta $f0
 	sep #$20
-	jsl Speed_Test_9_continue
+	jsl Speed_Test_9_continue|$800000
 	rep #$20
 	lda #.str
 	jmp write_text	
@@ -990,7 +993,7 @@ test_rom_parallel_jml:		; ROM ROM (JML)
 	lda #sa1_clock_finish
 	sta $f0
 	sep #$20
-	jsl Speed_Test_9_continue
+	jsl Speed_Test_9_continue|$800000
 	rep #$20
 	lda #.str
 	jmp write_text	
@@ -1092,7 +1095,7 @@ test_rom_o:
 .str	db "|   WRAM   | ROM-ODD | ",$ff
 
 test_rom_parallel_o:
-	jsl Speed_Test_8
+	jsl Speed_Test_8|$800000
 	rep #$20
 	lda #.str
 	jsr write_text
@@ -1110,7 +1113,7 @@ test_rom_16:
 .str	db "|   WRAM   | ROM-16C | ",$ff
 
 test_rom_parallel_16o:
-	jsl Speed_Test_6
+	jsl Speed_Test_6|$800000
 	rep #$20
 	lda #.str
 	jsr write_text
@@ -1128,7 +1131,7 @@ test_rom_16o:
 .str	db "|   WRAM   | ROM-16O | ",$ff
 
 test_rom_parallel_16:
-	jsl Speed_Test_7
+	jsl Speed_Test_7|$800000
 	rep #$20
 	lda #.str
 	jsr write_text
@@ -1146,13 +1149,24 @@ test_rom:
 .str	db "|   WRAM   |   ROM   | ",$ff
 
 test_rom_parallel:
-	jsl Speed_Test_9
+	jsl Speed_Test_9|$800000
 	rep #$20
 	lda #.str
 	jsr write_text
 	rts
 	
 .str	db "|   ROM    |   ROM   | ",$ff
+
+test_rom_parallel2:
+	jsl Speed_Test_90|$800000
+	rep #$20
+	lda #.str
+	jsr write_text
+	rts
+	
+.str	db "|TOGGLE ROM|   ROM   | ",$ff
+
+
 
 test_bwram:
 	jsl Speed_Test_10|$7f0000
@@ -1164,7 +1178,7 @@ test_bwram:
 .str	db "|   WRAM   |  BW-RAM | ",$ff
 
 test_bwram_rom:
-	jsl Speed_Test_10
+	jsl Speed_Test_10|$800000
 	rep #$20
 	lda #.str
 	jsr write_text
@@ -1182,7 +1196,7 @@ test_iram:
 .str	db "|   WRAM   |  I-RAM  | ",$ff
 
 test_iram_rom:
-	jsl Speed_Test_11
+	jsl Speed_Test_11|$800000
 	rep #$20
 	lda #.str
 	jsr write_text
@@ -1301,7 +1315,7 @@ test_dma_iram:
 .str	db "| DMA ROM  |  I-RAM  |~",$ff
 
 test_scpu_rom:
-	jsl Speed_Test_18
+	jsl Speed_Test_18|$800000
 	rep #$20
 	
 	lda #.string
@@ -1337,7 +1351,7 @@ test_scpu_iram:
 .str	db "| S-CPU I-RAM Access | ",$ff
 
 test_scpu_hdma_rom:
-	jsl Speed_Test_20
+	jsl Speed_Test_20|$800000
 	rep #$20
 	
 	lda #.string
@@ -2630,12 +2644,12 @@ Speed_Test_14:
 	ldx #$70
 -	lda #$1143
 	sta $4300,x
-	lda.w #hdma_tbl
+	lda.w #hdma_tbl|$800000
 	sta $4302,x
-	lda.w #hdma_tbl>>8
+	lda.w #hdma_tbl|$800000>>8
 	sta $4303,x
 	sep #$20
-	lda.b #hdma_tbl>>16
+	lda.b #hdma_tbl|$800000>>16
 	sta $4307,x
 	txa
 	sec
@@ -2929,6 +2943,46 @@ Speed_Test_9:
 	
 	lda #$00		; \ Wait for timer over.
 -	cmp #$00		;  |
+	bmi +			;  |
+	jmp -			; /
++
+
+	
+-	lda $3080
+	beq -
+	lda #$01
+	sta $4200
+	stz $0a01
+	rtl
+	
+Speed_Test_90:
+	rep #$20
+	lda #sa1_clock
+	sta $2207
+	lda #sa1_clock_finish
+	sta $f0
+	sep #$20
+.continue
+	
+	lda #$01
+	sta $4200
+	
+-	bit $4212
+	bpl -
+-	bit $4212
+	bmi -
+	
+	stz $3080
+	stz $3081
+	
+	lda #$81
+	sta $4200
+	ldy #$01
+	
+	lda #$00		; \ Wait for timer over.
+-	sta $420d
+	cmp #$00		;  |
+	sty $420d
 	bmi +			;  |
 	jmp -			; /
 +
