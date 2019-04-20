@@ -644,6 +644,16 @@ pick_method:
 	cpx #$80
 	bne -
 
+	ldx #$f0
+	stx $220b
+	stx $3081
+	lda.w #.dma_ret
+	sta $2207
+	cli
+	
+	LDA #$80
+	STA $2230
+	
 	LDA $F3
 	SEC
 	SBC #$22
@@ -664,14 +674,6 @@ pick_method:
 
 	LDA #$0080				; \ Set size of transfer
 	STA $2238				; /
-
-	lda.w #.dma_ret
-	sta $2207
-	
-	ldx #$f0
-	stx $220b
-	stx $3081
-	cli
 
 	LDA #$3700				; \ I-RAM destination address
 	STA $2235				; /
@@ -779,6 +781,12 @@ pick_method:
 	rep #$10
 	sep #$20
 	
+	LDX $F0
+	STX $2259
+	LDA $F2
+	STA $225B
+	;because here the shift is reset by to 16-bits??
+
 	lda $f3
 	sec
 	sbc #$12
@@ -786,12 +794,8 @@ pick_method:
 	ora #$80
 	sta $2258				; Set AUTO Mode
 	STA $3780
+	; THE ORDER HERE MATTERS!!!
 	
-	LDX $F0
-	STX $2259
-	LDA $F2
-	STA $225B
-
 	ldy #$0000
 -
 	lda $230c
