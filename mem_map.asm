@@ -571,6 +571,15 @@ pick_method:
 	
 	
 .snes
+	;lda #$04
+	;sta $2220
+	;lda #$05
+	;sta $2221
+	;lda #$08
+	;sta $2222
+	;lda #$10
+	;sta $2223
+
 	rep #$10
 	ldy #$0000
 -	lda [$f0],y
